@@ -10,9 +10,9 @@ const handleLogin = async (req, res) => {
             return res.status(400).json({ message: "Username and password are required." });
         }
         
-        const [foundUser] = await getUser({ username });
+        const foundUser = await getUser({ username });
     
-        if(foundUser.length === 0){
+        if(!foundUser){
             return res.status(401).json({ message: "Invalid username or password." });
         }
     

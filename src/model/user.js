@@ -8,7 +8,7 @@ const getUser = async (filters = {}) => {
 
     const conditions = [];
 
-    for (const key of keys) {
+    for(const key of keys){
         conditions.push(sql`${sql.unsafe(key)} = ${filters[key]}`);
     }
 
@@ -20,15 +20,35 @@ const getUser = async (filters = {}) => {
     return result[0];
 };
 
+const getUsers = async (filters = {}) => {
+    const keys = Object.keys(filters);
+    if (keys.length === 0) {
+        throw new Error('No filters provided');
+    }
+
+    const conditions = [];
+
+    for(const key of keys){
+        conditions.push(sql`${sql.unsafe(key)} = ${filters[key]}`);
+    }
+
+    const result = await sql`
+        SELECT * FROM users
+        WHERE ${conditions.reduce((prev, curr, index) => index === 0 ? curr : sql`${prev} OR ${curr}`)}
+    `;
+
+    return result;
+};
+
 const updateUser = async (filters = {}, updatedData = {}) => {
     const filterKeys = Object.keys(filters);
     const updateKeys = Object.keys(updatedData);
 
-    if (filterKeys.length === 0) {
+    if(filterKeys.length === 0){
         throw new Error('No filters provided');
     }
 
-    if (updateKeys.length === 0) {
+    if(updateKeys.length === 0){
         throw new Error('No update data provided');
     }
 
@@ -66,6 +86,7 @@ const createUser = async ({ username, hashed_password, email }) => {
 
 module.exports = {
     getUser,
+    getUsers,
     updateUser,
     createUser,
 }

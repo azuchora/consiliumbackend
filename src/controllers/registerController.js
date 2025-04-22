@@ -1,12 +1,12 @@
 const bcrypt = require('bcrypt');
 const LENGTH_LIMITS = require('../config/lengthLimits');
-const { getUser, createUser } = require('../model/user');
+const { getUsers, createUser } = require('../model/user');
 
 const handleNewUser = async (req, res) => {
     try {
         const { username, email, password } = req.body;
         
-        if (!username || !email || !password) {
+        if(!username || !email || !password){
             return res.status(400).json({ message: 'Username, email, and password are required.' });
         }
 
@@ -27,9 +27,9 @@ const handleNewUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email address.' });
         }
 
-        const existingUser = [].concat(await getUser({ username }), await getUser({ email }));
+        const existingUser = await getUsers({ username, email }); 
         
-        if (existingUser.length > 0) {
+        if(existingUser.length > 0){
             return res.status(409).json({ message: 'User with this username or email already exists.' });
         }
 
@@ -40,7 +40,7 @@ const handleNewUser = async (req, res) => {
             hashed_password: hashedPassword,
             email
         });
-
+        
         return res.status(201).json({ message: 'User registered successfully.', user: { username, id: newUser.id } });
     } catch (error) {
         console.error('Registration error:', error);
@@ -48,4 +48,4 @@ const handleNewUser = async (req, res) => {
     }
 };
 
-module.exports = { handleNewUser };
+module.exports = handleNewUser;
