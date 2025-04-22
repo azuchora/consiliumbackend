@@ -8,6 +8,7 @@ const corsOptions = require('./src/config/corsOptions');
 const registerRouter = require('./src/routes/register');
 const loginRouter = require('./src/routes/login');
 const refreshTokenRouter = require('./src/routes/refreshToken');
+const logoutRouter = require('./src/routes/logout');
 
 const APP_PORT = process.env.APP_PORT || 3000;
 const API_ROUTE = process.env.API_ROUTE;
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use(`${API_ROUTE}`, registerRouter);
 app.use(`${API_ROUTE}`, loginRouter);
 app.use(`${API_ROUTE}`, refreshTokenRouter);
+app.use(`${API_ROUTE}`, logoutRouter);
 
 app.get('/*', async (req, res) => {
     res.send('hello world');
