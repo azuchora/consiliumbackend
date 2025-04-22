@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getUser, updateUser } = require('../model/user');
+const TOKENS = require('../config/tokens');
 
 const handleLogin = async (req, res) => {
     try {
@@ -22,18 +23,18 @@ const handleLogin = async (req, res) => {
         }
     
         const accessToken = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: "30s",
+            expiresIn: TOKENS.access.expiresIn,
         });
 
         const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: "1d",
+            expiresIn: TOKENS.refresh.expiresIn,
         });
         
         await updateUser({ username }, { refresh_token: refreshToken });
     
         res.cookie("jwt", refreshToken, {
-          secure: true,
-          maxAge: 24 * 60 * 60 * 1000,
+          secure: false,
+          maxAge: TOKENS.refresh.maxAge, 
           httpOnly: true,
         });
 

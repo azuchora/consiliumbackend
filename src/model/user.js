@@ -2,7 +2,7 @@ const sql = require('../config/db');
 
 const getUser = async (filters = {}) => {
     const keys = Object.keys(filters);
-    if (keys.length === 0) {
+    if(keys.length === 0){
         throw new Error('No filters provided');
     }
 
@@ -22,7 +22,7 @@ const getUser = async (filters = {}) => {
 
 const getUsers = async (filters = {}) => {
     const keys = Object.keys(filters);
-    if (keys.length === 0) {
+    if(keys.length === 0){
         throw new Error('No filters provided');
     }
 
