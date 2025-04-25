@@ -17,7 +17,7 @@ const handleNewUser = async (req, res) => {
         }
         
         // min 1: lowercase, uppercase, digit, special char
-        const lookAhead = "(?=(.*[a-z]))(?=(.*[A-Z]))(?=(.*\\d))(?=(.*[@$!%*?#&^_-]))";
+        const lookAhead = '(?=(.*[a-z]))(?=(.*[A-Z]))(?=(.*\\d))(?=(.*[@$!%*?#&^_-]))';
         const passwordRegex = new RegExp(`^${lookAhead}[a-zA-Z0-9@$!%*?#&^_-]{${LENGTH_LIMITS.password.min},${LENGTH_LIMITS.password.max}}$`);
         if(!passwordRegex.test(password)){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid password.' });

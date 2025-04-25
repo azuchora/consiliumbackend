@@ -1,7 +1,7 @@
-const { createFile } = require("../model/files");
-const { createPost, deletePost } = require("../model/posts");
+const { createFile, getFiles } = require('../model/files');
+const { createPost, deletePost, getPost } = require('../model/posts');
 const { StatusCodes } = require('http-status-codes');
-const fileService = require("../services/fileService");
+const fileService = require('../services/fileService');
 
 const handleNewPost = async (req, res) => {
     try {
@@ -15,8 +15,8 @@ const handleNewPost = async (req, res) => {
         const newPost = await createPost({ userId: user.id, title, description });
 
         const files = req.files;
-        const fileNames = [];
-
+        const createdFiles = [];
+        if(files)
         try {
             for(const key of Object.keys(files)){
                 const fileField = files[key];
@@ -24,8 +24,8 @@ const handleNewPost = async (req, res) => {
 
                 for(const file of fileArray){
                     const filename = await fileService.saveFile(file);
-                    fileNames.push(filename);
-                    await createFile({ filename, post_id: newPost.id});
+                    const createdFile = await createFile({ filename, post_id: newPost.id});
+                    createdFiles.push({ id: createdFile.id, filename: createdFile.filename });
                 }
             }
         } catch (error){
@@ -33,14 +33,48 @@ const handleNewPost = async (req, res) => {
                 await fileService.removeFile(filename);
             }
             await deletePost({ id: newPost });
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: "Error while saving attachments." });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Error while saving attachments.' });
         }
         
-        return res.status(StatusCodes.CREATED).json({ post: newPost, fileNames });
+        return res.status(StatusCodes.CREATED).json({ post: newPost, files: createdFiles });
     } catch (error) {
-        console.error("CreatePost error:", error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal Server Error" });
+        console.error('CreatePost error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
       }
 };
 
-module.exports = handleNewPost;
+const handleGetPost = async (req, res) => {
+    try {
+        const postId = Number(req.params.id);
+        
+        if(!postId){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Post id is required.' });
+        }
+
+        if(!Number.isInteger(postId)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+        }
+
+        const foundPost = await getPost({ id: postId });
+
+        if(!foundPost){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+        }
+
+        const foundFiles = await getFiles({ post_id: postId });
+        const postFiles = foundFiles.map(file => ({
+            id: file.id,
+            filename: file.filename
+        }));
+
+        return res.status(StatusCodes.OK).json({ post: {...foundPost, files: postFiles} });
+    } catch (error) {
+        console.error('getPost error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
+module.exports = {
+    handleNewPost,
+    handleGetPost,
+}

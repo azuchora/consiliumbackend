@@ -23,8 +23,8 @@ const handleRefreshToken = async (req, res) => {
             res.json({ accessToken });
         });
     } catch (error) {
-        console.error("RefreshToken error:", error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal Server Error" });
+        console.error('RefreshToken error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
     }
 };
 

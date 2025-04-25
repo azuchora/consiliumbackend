@@ -1,7 +1,7 @@
 const { StatusCodes } = require('http-status-codes');
 
 const filesPayloadExists = (req, res, next) => {
-    if(!req.files) return res.status(StatusCodes.BAD_REQUEST).json({ status: "error", message: "Missing files" });
+    if(!req.files) return res.status(StatusCodes.BAD_REQUEST).json({ status: 'error', message: 'Missing files' });
 
     next();
 }
