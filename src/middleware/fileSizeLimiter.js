@@ -1,4 +1,5 @@
 const SIZE_LIMITS = require('../config/sizeLimits');
+const { StatusCodes } = require('http-status-codes');
 
 const fileSizeLimiter = (req, res, next) => {
     const files = req.files;
@@ -25,7 +26,7 @@ const fileSizeLimiter = (req, res, next) => {
             ? sentence.replace(",", " and")
             : sentence.replace(/,(?=[^,]*$)/, " and");
 
-        return res.status(413).json({ status: "error", message });
+        return res.status(StatusCodes.REQUEST_TOO_LONG).json({ status: "error", message });
 
     }
 

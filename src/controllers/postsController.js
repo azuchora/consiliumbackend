@@ -1,5 +1,6 @@
 const { createFile } = require("../model/files");
 const { createPost, deletePost } = require("../model/posts");
+const { StatusCodes } = require('http-status-codes');
 const fileService = require("../services/fileService");
 
 const handleNewPost = async (req, res) => {
@@ -8,7 +9,7 @@ const handleNewPost = async (req, res) => {
         const user = req.user;
 
         if(!title || !description){
-            return res.status(400).json({ message: 'Title and description are required.' })
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Title and description are required.' })
         }
         
         const newPost = await createPost({ userId: user.id, title, description });
@@ -32,13 +33,13 @@ const handleNewPost = async (req, res) => {
                 await fileService.removeFile(filename);
             }
             await deletePost({ id: newPost });
-            return res.status(500).json({ message: "Error while saving attachments." });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: "Error while saving attachments." });
         }
         
-        return res.status(201).json({ post: newPost, fileNames });
+        return res.status(StatusCodes.CREATED).json({ post: newPost, fileNames });
     } catch (error) {
         console.error("CreatePost error:", error);
-        return res.status(500).json({ message: "Internal Server Error" });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Internal Server Error" });
       }
 };
 
