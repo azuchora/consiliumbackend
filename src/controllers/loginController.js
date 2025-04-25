@@ -21,24 +21,30 @@ const handleLogin = async (req, res) => {
         if(!match){
             return res.status(401).json({ message: "Invalid username or password." });
         }
-    
-        const accessToken = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, {
+        
+        const accessToken = jwt.sign({ username, id: foundUser.id }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: TOKENS.access.expiresIn,
         });
 
-        const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET, {
+        const refreshToken = jwt.sign({ username, id: foundUser.id }, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: TOKENS.refresh.expiresIn,
         });
         
+        const user = {
+            username: foundUser.username,
+            avatar_filename: foundUser.avatar_filename,
+            id: foundUser.id 
+        };
+
         await updateUser({ username }, { refresh_token: refreshToken });
     
         res.cookie("jwt", refreshToken, {
-          secure: false,
+          secure: process.env.IS_PROD === "true",
           maxAge: TOKENS.refresh.maxAge, 
           httpOnly: true,
         });
 
-        return res.json({ uid: foundUser.id, accessToken });
+        return res.json({ user, accessToken });
       } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "Internal Server Error" });

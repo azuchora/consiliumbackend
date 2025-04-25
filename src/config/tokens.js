@@ -4,7 +4,7 @@ const TOKENS = {
         maxAge: 24 * 60 * 60 * 1000
     },
     access: {
-        expiresIn: '30s'
+        expiresIn: '7d'
     }
 }
 

@@ -9,12 +9,12 @@ const handleLogout = async (req, res) => {
         const foundUser = await getUser({ refresh_token: refreshToken })
 
         if(!foundUser){
-            res.clearCookie('jwt', { httpOnly: true, secure: false });
+            res.clearCookie('jwt', { httpOnly: true, secure: process.env.IS_PROD === "true" });
             return res.sendStatus(204);
         }
         
         await updateUser({ id: foundUser.id }, { refresh_token: null });
-        res.clearCookie('jwt', { httpOnly: true, secure: false });
+        res.clearCookie('jwt', { httpOnly: true, secure: process.env.IS_PROD === "true" });
         res.sendStatus(204);
     } catch (error) {
         console.error("Logout error:", error);
