@@ -10,7 +10,11 @@ const LENGTH_LIMITS = {
     email: {
         min: 3,
         max: 254
-    }
+    },
+    comment: {
+        min: 10,
+        max: 800
+    },
 }
 
 module.exports = LENGTH_LIMITS;

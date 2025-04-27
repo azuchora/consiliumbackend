@@ -24,16 +24,16 @@ const handleNewPost = async (req, res) => {
 
                 for(const file of fileArray){
                     const filename = await fileService.saveFile(file);
-                    const createdFile = await createFile({ filename, post_id: newPost.id});
-                    createdFiles.push({ id: createdFile.id, filename: createdFile.filename });
+                    createdFiles.push({ filename });
+                    await createFile({ filename, post_id: newPost.id});
                 }
             }
         } catch (error){
-            for(const filename of fileNames){
-                await fileService.removeFile(filename);
+            for(const file of createdFiles){
+                await fileService.removeFile(file.filename);
             }
-            await deletePost({ id: newPost });
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Error while saving attachments.' });
+            await deletePost({ id: newPost.id });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error while saving attachments.' });
         }
         
         return res.status(StatusCodes.CREATED).json({ post: newPost, files: createdFiles });

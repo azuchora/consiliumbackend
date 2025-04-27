@@ -10,6 +10,7 @@ const loginRouter = require('./src/routes/login');
 const refreshTokenRouter = require('./src/routes/refreshToken');
 const logoutRouter = require('./src/routes/logout');
 const postsRouter = require('./src/routes/posts');
+const usersRouter = require('./src/routes/users');
 
 const APP_PORT = process.env.APP_PORT || 3000;
 const API_ROUTE = process.env.API_ROUTE;
@@ -28,10 +29,10 @@ app.use(`${API_ROUTE}`, loginRouter);
 app.use(`${API_ROUTE}`, refreshTokenRouter);
 app.use(`${API_ROUTE}`, logoutRouter);
 app.use(`${API_ROUTE}`, postsRouter);
+app.use(`${API_ROUTE}`, usersRouter);
 
 app.get('/*', async (req, res) => {
     res.send('hello world');
-    // console.log(await createFile({ filename: 'xd.jpog', post_id: 1}))
 })
 
 app.listen(APP_PORT, () => {

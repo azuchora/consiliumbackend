@@ -3,7 +3,7 @@ const { getOneByFilters, getManyByFilters, updateByFilters, deleteByFilters } = 
 
 const getPost = (filters = {}) => getOneByFilters('posts', filters);
 const getPosts = (filters = {}) => getManyByFilters('posts', filters);
-const updatePost = (filters = {}) => updateByFilters('posts', filters);
+const updatePost = (filters = {}, updatedData = {}) => updateByFilters('posts', filters, updatedData);
 const deletePost = (filters = {}) => deleteByFilters('posts', filters);
 
 const createPost = async ({ userId, title, description }) => {

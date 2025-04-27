@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
 const { getUser, updateUser } = require('../model/user');
 const TOKENS = require('../config/tokens');
+const { getFile } = require('../model/files');
 
 const handleLogin = async (req, res) => {
     try {
@@ -31,9 +32,12 @@ const handleLogin = async (req, res) => {
             expiresIn: TOKENS.refresh.expiresIn,
         });
         
+        const avatarFilename = (await getFile({ user_id: foundUser.id }))?.filename;
+        
         const user = {
             username: foundUser.username,
-            id: foundUser.id 
+            id: foundUser.id,
+            avatarFilename: avatarFilename ? avatarFilename : null,
         };
 
         await updateUser({ username }, { refresh_token: refreshToken });
