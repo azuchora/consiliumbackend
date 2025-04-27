@@ -77,7 +77,7 @@ const updateByFilters = async (tableName, filters = {}, updatedData = {}) => {
 
 const deleteByFilters = async (tableName, filters = {}) => {
     const keys = Object.keys(filters);
-
+    
     if (keys.length === 0) {
         throw new Error('No filters provided');
     }
@@ -95,7 +95,7 @@ const deleteByFilters = async (tableName, filters = {}) => {
         RETURNING *
     `;
 
-    return result[0];
+    return result;
 };
 
 module.exports = {

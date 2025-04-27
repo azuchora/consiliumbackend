@@ -33,7 +33,6 @@ const handleLogin = async (req, res) => {
         
         const user = {
             username: foundUser.username,
-            avatar_filename: foundUser.avatar_filename,
             id: foundUser.id 
         };
 

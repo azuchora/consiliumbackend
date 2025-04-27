@@ -3,7 +3,7 @@ const { getOneByFilters, getManyByFilters, updateByFilters, deleteByFilters } = 
 
 const getFile = (filters = {}) => getOneByFilters('files', filters);
 const getFiles = (filters = {}) => getManyByFilters('files', filters);
-const updateFile = (filters = {}) => updateByFilters('files', filters);
+const updateFile = (filters = {}, updatedData = {}) => updateByFilters('files', filters, updatedData);
 const deleteFile = (filters = {}) => deleteByFilters('files', filters);
 
 const createFile = async (fileData = {}) => {

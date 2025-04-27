@@ -3,7 +3,7 @@ const { getOneByFilters, getManyByFilters, updateByFilters } = require('../db/qu
 
 const getUser = (filters = {}) => getOneByFilters('users', filters);
 const getUsers = (filters = {}) => getManyByFilters('users', filters);
-const updateUser = (filters = {}) => updateByFilters('users', filters);
+const updateUser = (filters = {}, updatedData = {}) => updateByFilters('users', filters, updatedData);
 
 const createUser = async ({ username, hashed_password, email }) => {
     if(!username || !hashed_password || !email){

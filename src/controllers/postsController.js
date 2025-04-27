@@ -46,12 +46,8 @@ const handleNewPost = async (req, res) => {
 const handleGetPost = async (req, res) => {
     try {
         const postId = Number(req.params.id);
-        
-        if(!postId){
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Post id is required.' });
-        }
 
-        if(!Number.isInteger(postId)){
+        if(!postId || !Number.isInteger(postId)){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
@@ -74,7 +70,36 @@ const handleGetPost = async (req, res) => {
     }
 };
 
+const handleDeletePost = async (req, res) => {
+    try {
+        const postId = Number(req.params.id);
+        const user = req.user;
+
+        if(!postId || !Number.isInteger(postId)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+        }
+
+        const foundPost = await getPost({ id: postId });
+        
+        if(!foundPost){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+        }
+
+        if(foundPost.user_id != user.id){
+            return res.status(StatusCodes.FORBIDDEN).json({ message: 'No permission to delete post.' });
+        }
+
+        await deletePost({ id: postId });
+
+        return res.sendStatus(StatusCodes.NO_CONTENT);
+    } catch (error) {
+        console.error('DeletePost error');
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error '});
+    }
+};
+
 module.exports = {
     handleNewPost,
     handleGetPost,
+    handleDeletePost,
 }
