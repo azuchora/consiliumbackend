@@ -89,11 +89,16 @@ const handleDeletePost = async (req, res) => {
             return res.status(StatusCodes.FORBIDDEN).json({ message: 'No permission to delete post.' });
         }
 
+        const postFiles = await getFiles({ post_id: postId });
+        for(const file of postFiles){
+            await fileService.removeFile(file.filename);
+        }
+        
         await deletePost({ id: postId });
 
         return res.sendStatus(StatusCodes.NO_CONTENT);
     } catch (error) {
-        console.error('DeletePost error');
+        console.error('DeletePost error', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error '});
     }
 };
