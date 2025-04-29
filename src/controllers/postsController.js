@@ -1,5 +1,5 @@
 const { createFile, getFiles } = require('../model/files');
-const { createPost, deletePost, getPost } = require('../model/posts');
+const { createPost, deletePost, getPost, getPostWithFiles, getPaginatedPosts } = require('../model/posts');
 const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
 
@@ -51,19 +51,13 @@ const handleGetPost = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
-        const foundPost = await getPost({ id: postId });
+        const foundPost = await getPostWithFiles({ id: postId });
 
         if(!foundPost){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
-        const foundFiles = await getFiles({ post_id: postId });
-        const postFiles = foundFiles.map(file => ({
-            id: file.id,
-            filename: file.filename
-        }));
-
-        return res.status(StatusCodes.OK).json({ post: {...foundPost, files: postFiles} });
+        return res.status(StatusCodes.OK).json({ post: {...foundPost } });
     } catch (error) {
         console.error('getPost error:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
@@ -103,8 +97,37 @@ const handleDeletePost = async (req, res) => {
     }
 };
 
+const handleGetPosts = async (req, res) => {
+    try {
+        const { limit = 10, postStatusId, lastFetchedTimestamp } = req.query;
+
+        const posts = await getPaginatedPosts({
+            limit,
+            postStatusId: postStatusId || null,
+            lastFetchedTimestamp: lastFetchedTimestamp || null
+        });
+        
+        const newLastFetchedTimestamp = posts.length > 0 
+            ? posts[posts.length - 1].created_at 
+            : lastFetchedTimestamp;
+
+        return res.status(StatusCodes.OK).json({
+            posts,
+            pagination: {
+                limit,
+                lastFetchedTimestamp: newLastFetchedTimestamp,
+                hasMore: posts.length === Number(limit)
+            }
+        });
+    } catch (error) {
+        console.error('handleGetPosts error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
     handleNewPost,
     handleGetPost,
     handleDeletePost,
+    handleGetPosts,
 }

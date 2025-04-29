@@ -2,7 +2,7 @@ const sql = require('../db/client');
 
 const getOneByFilters = async (tableName, filters = {}) => {
     const keys = Object.keys(filters);
-    if (keys.length === 0) {
+    if(keys.length === 0){
         throw new Error('No filters provided');
     }
 
@@ -21,7 +21,7 @@ const getOneByFilters = async (tableName, filters = {}) => {
 
 const getManyByFilters = async (tableName, filters = {}) => {
     const keys = Object.keys(filters);
-    if (keys.length === 0) {
+    if(keys.length === 0){
         throw new Error('No filters provided');
     }
 
@@ -43,11 +43,11 @@ const updateByFilters = async (tableName, filters = {}, updatedData = {}) => {
     const filterKeys = Object.keys(filters);
     const updateKeys = Object.keys(updatedData);
 
-    if (filterKeys.length === 0) {
+    if(filterKeys.length === 0){
         throw new Error('No filters provided');
     }
 
-    if (updateKeys.length === 0) {
+    if(updateKeys.length === 0){
         throw new Error('No update data provided');
     }
     
@@ -78,7 +78,7 @@ const updateByFilters = async (tableName, filters = {}, updatedData = {}) => {
 const deleteByFilters = async (tableName, filters = {}) => {
     const keys = Object.keys(filters);
     
-    if (keys.length === 0) {
+    if(keys.length === 0){
         throw new Error('No filters provided');
     }
 

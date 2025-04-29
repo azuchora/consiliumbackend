@@ -1,7 +1,7 @@
 const { StatusCodes } = require('http-status-codes');
 const LENGTH_LIMITS = require('../config/lengthLimits');
 const { getPost } = require('../model/posts');
-const { getComment, createComment, deleteComment } = require('../model/comments');
+const { getComment, createComment, deleteComment, getPaginatedParentComments, countParentComments, getPaginatedChildComments, countChildComments } = require('../model/comments');
 const fileService = require('../services/fileService');
 const { createFile } = require('../model/files');
 
@@ -65,11 +65,79 @@ const handleNewComment = async (req, res) => {
 
         return res.status(StatusCodes.OK).json({ comment: newComment });
     } catch (error){
-        console.error('Error adding comment:', error);
+        console.error('newComment error: ', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
+const handleGetParentComments = async (req, res) => {
+    try {
+        const postId = Number(req.params.id);
+        const { limit = 10, lastFetchedTimestamp } = req.query;
+
+        if(!postId || !Number.isInteger(postId)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+        }
+
+        const comments = await getPaginatedParentComments({
+            postId,
+            limit,
+            lastFetchedTimestamp: lastFetchedTimestamp || null
+        });
+        
+        const newLastFetchedTimestamp = comments.length > 0 
+            ? comments[comments.length - 1].created_at 
+            : lastFetchedTimestamp;
+
+        return res.status(StatusCodes.OK).json({
+            comments,
+            pagination: {
+                limit,
+                lastFetchedTimestamp: newLastFetchedTimestamp,
+                hasMore: comments.length === Number(limit)
+            }
+        });
+    } catch (error){
+        console.error('getParentComments: ', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
+const handleGetChildComments = async (req, res) => {
+    try {
+        const parentId = Number(req.params.id);
+        const { limit = 5, lastFetchedTimestamp } = req.query;
+
+        if(!parentId || !Number.isInteger(parentId)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid parent comment id.' });
+        }
+
+        const replies = await getPaginatedChildComments({ 
+            parentId,
+            limit,
+            lastFetchedTimestamp: lastFetchedTimestamp || null
+        });
+
+        const newLastFetchedTimestamp = replies.length > 0
+            ? replies[replies.length - 1].created_at
+            : lastFetchedTimestamp;
+
+        return res.status(StatusCodes.OK).json({
+            replies,
+            pagination: {
+                limit,
+                lastFetchedTimestamp: newLastFetchedTimestamp,
+                hasMore: replies.length === Number(limit)
+            }
+        });
+    } catch(error){
+        console.error('getChildComments: ', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
     }
 };
 
 module.exports = {
     handleNewComment,
+    handleGetParentComments,
+    handleGetChildComments,
 };

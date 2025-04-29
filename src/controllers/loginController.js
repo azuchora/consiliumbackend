@@ -1,12 +1,14 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
-const { getUser, updateUser } = require('../model/user');
+const { getUser, getUserByRefreshToken } = require('../model/user');                   
 const TOKENS = require('../config/tokens');
 const { getFile } = require('../model/files');
+const { deleteRefreshTokens, createRefreshToken } = require('../model/refreshTokens');
 
 const handleLogin = async (req, res) => {
     try {
+        const cookies = req.cookies;
         const { username, password } = req.body;
     
         if(!username || !password){
@@ -28,7 +30,7 @@ const handleLogin = async (req, res) => {
             expiresIn: TOKENS.access.expiresIn,
         });
 
-        const refreshToken = jwt.sign({ username, id: foundUser.id }, process.env.REFRESH_TOKEN_SECRET, {
+        const newRefreshToken = jwt.sign({ username, id: foundUser.id }, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: TOKENS.refresh.expiresIn,
         });
         
@@ -39,15 +41,28 @@ const handleLogin = async (req, res) => {
             id: foundUser.id,
             avatarFilename: avatarFilename ? avatarFilename : null,
         };
+        
+        
+        if(cookies?.jwt){
+            const refreshToken = cookies.jwt;
+            const foundToken = await getUserByRefreshToken(refreshToken);
 
-        await updateUser({ username }, { refresh_token: refreshToken });
+            if(!foundToken){
+                await deleteRefreshTokens({ user_id: foundUser.id });
+            }
+            
+            res.clearCookie('jwt', { httpOnly: true, secure: process.env.IS_PROD === 'true' });
+            await deleteRefreshTokens({ token: refreshToken });
+        }
+
+        await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
     
-        res.cookie('jwt', refreshToken, {
+        res.cookie('jwt', newRefreshToken, {
           secure: process.env.IS_PROD === 'true',
           maxAge: TOKENS.refresh.maxAge, 
           httpOnly: true,
         });
-
+        
         return res.json({ user, accessToken });
       } catch (error) {
         console.error('Login error:', error);

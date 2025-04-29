@@ -1,10 +1,10 @@
 const TOKENS = {
     refresh: {
-        expiresIn: '7d',
+        expiresIn: '30d',
         maxAge: 24 * 60 * 60 * 1000
     },
     access: {
-        expiresIn: '7d'
+        expiresIn: '30d'
     }
 }
 

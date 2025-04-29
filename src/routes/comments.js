@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { handleNewPost, handleGetPost, handleDeletePost, handleGetPosts } = require('../controllers/postsController');
+const { handleNewComment, handleGetParentComments, handleGetChildComments } = require('../controllers/commentsController');
 const verifyJWT = require('../middleware/verifyJWT');
 const fileUpload = require('express-fileupload');
 const fileExtLimiter = require('../middleware/fileExtLimiter');
@@ -8,17 +8,15 @@ const fileSizeLimiter = require('../middleware/fileSizeLimiter');
 
 router.use(verifyJWT);
 
-router.post('/posts', 
+router.post('/posts/:id/comments', 
     fileUpload({ createParentPath: true }), 
     fileExtLimiter(['.png', '.jpg', '.jpeg']), 
-    fileSizeLimiter, 
-    handleNewPost
+    fileSizeLimiter,
+    handleNewComment
 );
 
-router.get('/posts', handleGetPosts);
+router.get('/posts/:id/comments', handleGetParentComments);
 
-router.get('/posts/:id', handleGetPost);
-
-router.delete('/posts/:id', handleDeletePost);
+router.get('/comments/:id/replies', handleGetChildComments);
 
 module.exports = router;

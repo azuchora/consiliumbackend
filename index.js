@@ -11,6 +11,7 @@ const refreshTokenRouter = require('./src/routes/refreshToken');
 const logoutRouter = require('./src/routes/logout');
 const postsRouter = require('./src/routes/posts');
 const usersRouter = require('./src/routes/users');
+const commentsRouter = require('./src/routes/comments');
 
 const APP_PORT = process.env.APP_PORT || 3000;
 const API_ROUTE = process.env.API_ROUTE;
@@ -30,6 +31,7 @@ app.use(`${API_ROUTE}`, refreshTokenRouter);
 app.use(`${API_ROUTE}`, logoutRouter);
 app.use(`${API_ROUTE}`, postsRouter);
 app.use(`${API_ROUTE}`, usersRouter);
+app.use(`${API_ROUTE}`, commentsRouter);
 
 app.get('/*', async (req, res) => {
     res.send('hello world');

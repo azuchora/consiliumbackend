@@ -1,4 +1,5 @@
-const { getUser, updateUser } = require('../model/user');
+const { deleteRefreshTokens } = require('../model/refreshTokens');
+const { getUserByRefreshToken } = require('../model/user');
 const { StatusCodes } = require('http-status-codes');
 
 const handleLogout = async (req, res) => {
@@ -7,14 +8,14 @@ const handleLogout = async (req, res) => {
         if(!cookies.jwt) return res.sendStatus(StatusCodes.NO_CONTENT);
         
         const refreshToken = cookies.jwt;
-        const foundUser = await getUser({ refresh_token: refreshToken })
+        const foundUser = await getUserByRefreshToken(refreshToken);
 
         if(!foundUser){
             res.clearCookie('jwt', { httpOnly: true, secure: process.env.IS_PROD === 'true' });
             return res.sendStatus(StatusCodes.NO_CONTENT);
         }
         
-        await updateUser({ id: foundUser.id }, { refresh_token: null });
+        await deleteRefreshTokens({ token: refreshToken });
         res.clearCookie('jwt', { httpOnly: true, secure: process.env.IS_PROD === 'true' });
         res.sendStatus(StatusCodes.NO_CONTENT);
     } catch (error) {
