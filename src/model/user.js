@@ -1,6 +1,7 @@
 const sql = require('../db/client');
 const { getOneByFilters, getManyByFilters, updateByFilters } = require('../db/queries');
 const { getRefreshTokens } = require('./refreshTokens');
+const { getRoles } = require('./roles');
 
 const getUser = (filters = {}) => getOneByFilters('users', filters);
 const getUsers = (filters = {}) => getManyByFilters('users', filters);
@@ -32,6 +33,19 @@ const getUserWithTokens = async (filters = {}) => {
     }
 };
 
+const getUserWithRoles = async (filters = {}) => {
+    const foundUser = await getUser(filters);
+    if(!foundUser) return null;
+
+    const foundRoles = await getRoles({ user_id: foundUser.id });
+    const roles = foundRoles.map(r => r.role_id)
+    
+    return {
+        ...foundUser,
+        roles: [...roles]
+    }
+};
+
 const getUserByRefreshToken = async (refreshToken) => {
     if (!refreshToken) {
         throw new Error('Refresh token is required');
@@ -55,4 +69,5 @@ module.exports = {
     createUser,
     getUserWithTokens,
     getUserByRefreshToken,
+    getUserWithRoles,
 }

@@ -2,6 +2,7 @@ const { createFile, getFiles } = require('../model/files');
 const { createPost, deletePost, getPost, getPostWithFiles, getPaginatedPosts } = require('../model/posts');
 const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
+const { sanitizeId } = require('../services/sanitizationService');
 
 const handleNewPost = async (req, res) => {
     try {
@@ -45,9 +46,9 @@ const handleNewPost = async (req, res) => {
 
 const handleGetPost = async (req, res) => {
     try {
-        const postId = Number(req.params.id);
+        const postId = sanitizeId(req.params.id);
 
-        if(!postId || !Number.isInteger(postId)){
+        if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
@@ -66,10 +67,10 @@ const handleGetPost = async (req, res) => {
 
 const handleDeletePost = async (req, res) => {
     try {
-        const postId = Number(req.params.id);
+        const postId = sanitizeId(req.params.id);
         const user = req.user;
 
-        if(!postId || !Number.isInteger(postId)){
+        if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 

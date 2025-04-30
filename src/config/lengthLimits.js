@@ -7,12 +7,8 @@ const LENGTH_LIMITS = {
         min: 8,
         max: 32
     },
-    email: {
-        min: 3,
-        max: 254
-    },
     comment: {
-        min: 10,
+        min: 1,
         max: 800
     },
 }

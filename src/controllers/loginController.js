@@ -1,10 +1,9 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
-const { getUser, getUserByRefreshToken } = require('../model/user');                   
-const TOKENS = require('../config/tokens');
+const { getUserByRefreshToken, getUserWithRoles } = require('../model/user');                   
 const { getFile } = require('../model/files');
 const { deleteRefreshTokens, createRefreshToken } = require('../model/refreshTokens');
+const { generateAccessToken, generateRefreshToken, clearRefreshTokenCookie, setRefreshTokenCookie } = require('../services/tokenService');
 
 const handleLogin = async (req, res) => {
     try {
@@ -15,8 +14,8 @@ const handleLogin = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Username and password are required.' });
         }
         
-        const foundUser = await getUser({ username });
-    
+        const foundUser = await getUserWithRoles({ username });
+        
         if(!foundUser){
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid username or password.' });
         }
@@ -26,14 +25,9 @@ const handleLogin = async (req, res) => {
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid username or password.' });
         }
         
-        const accessToken = jwt.sign({ username, id: foundUser.id }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: TOKENS.access.expiresIn,
-        });
+        const accessToken = generateAccessToken({ username, id: foundUser.id, roles: foundUser.roles });
+        const newRefreshToken = generateRefreshToken({ username, id: foundUser.id, roles: foundUser.roles });
 
-        const newRefreshToken = jwt.sign({ username, id: foundUser.id }, process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: TOKENS.refresh.expiresIn,
-        });
-        
         const avatarFilename = (await getFile({ user_id: foundUser.id }))?.filename;
         
         const user = {
@@ -41,7 +35,6 @@ const handleLogin = async (req, res) => {
             id: foundUser.id,
             avatarFilename: avatarFilename ? avatarFilename : null,
         };
-        
         
         if(cookies?.jwt){
             const refreshToken = cookies.jwt;
@@ -51,17 +44,13 @@ const handleLogin = async (req, res) => {
                 await deleteRefreshTokens({ user_id: foundUser.id });
             }
             
-            res.clearCookie('jwt', { httpOnly: true, secure: process.env.IS_PROD === 'true' });
+            clearRefreshTokenCookie(res);
             await deleteRefreshTokens({ token: refreshToken });
         }
 
         await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
     
-        res.cookie('jwt', newRefreshToken, {
-          secure: process.env.IS_PROD === 'true',
-          maxAge: TOKENS.refresh.maxAge, 
-          httpOnly: true,
-        });
+        setRefreshTokenCookie(res, newRefreshToken);
         
         return res.json({ user, accessToken });
       } catch (error) {

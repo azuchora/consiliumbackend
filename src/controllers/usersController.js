@@ -5,15 +5,14 @@ const { getUser } = require('../model/user');
 
 const handleUploadAvatar = async (req, res) => {
     try {
-        const userId = Number(req.params.id);
+        const userId = sanitizeId(req.params.id);
         
-        if(!userId || !Number.isInteger(userId)){
+        if(!userId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user ID.' });
         }
 
         const user = req.user;
 
-        // CHANGE WHEN ROLES (WIP)
         if(user.id != userId){
             return res.sendStatus(StatusCodes.FORBIDDEN);
         }
@@ -60,9 +59,9 @@ const handleUploadAvatar = async (req, res) => {
 
 const handleGetAvatar = async (req, res) => {
     try {
-        const userId = Number(req.params.id);
+        const userId = sanitizeId(req.params.id);
         
-        if(!userId || !Number.isInteger(userId)){
+        if(!userId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user ID.' });
         }
 
@@ -77,9 +76,9 @@ const handleGetAvatar = async (req, res) => {
 
 const handleGetUser = async (req, res) => {
     try {
-        const userId = Number(req.params.id);
+        const userId = sanitizeId(req.params.id);
         
-        if(!userId || !Number.isInteger(userId)){
+        if(!userId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user ID.' });
         }
 
@@ -89,6 +88,7 @@ const handleGetUser = async (req, res) => {
             username,
             created_at
         }
+        
         return res.status(StatusCodes.OK).json({ user })
     } catch (error){
         console.error('getUser error:', error);

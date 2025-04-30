@@ -1,18 +1,18 @@
 const { StatusCodes } = require('http-status-codes');
-const LENGTH_LIMITS = require('../config/lengthLimits');
 const { getPost } = require('../model/posts');
-const { getComment, createComment, deleteComment, getPaginatedParentComments, countParentComments, getPaginatedChildComments, countChildComments } = require('../model/comments');
+const { getComment, createComment, deleteComment, getPaginatedParentComments, getPaginatedChildComments } = require('../model/comments');
 const fileService = require('../services/fileService');
 const { createFile } = require('../model/files');
+const { sanitizeId, isValidComment } = require('../services/sanitizationService');
 
 const handleNewComment = async (req, res) => {
     try {
         const userId = req.user.id;
         const { content, parentCommentId } = req.body;
 
-        const postId = Number(req.params.id);
+        const postId = sanitizeId(req.params.id);
 
-        if(!postId || !Number.isInteger(postId)){
+        if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
     
@@ -20,9 +20,8 @@ const handleNewComment = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Content is required.' });
         }
     
-        if(content.length < LENGTH_LIMITS.comment.min || content.length > LENGTH_LIMITS.comment.max){
-            const message = `Invalid comment length. ${LENGTH_LIMITS.comment.min} <= comment ${LENGTH_LIMITS.comment.max}`;
-            return res.status(StatusCodes.BAD_REQUEST).json({ message });
+        if(!isValidComment(content)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment length.' });
         }
 
         const foundPost = await getPost({id: postId });
@@ -72,10 +71,10 @@ const handleNewComment = async (req, res) => {
 
 const handleGetParentComments = async (req, res) => {
     try {
-        const postId = Number(req.params.id);
+        const postId = sanitizeId(req.params.id);
         const { limit = 10, lastFetchedTimestamp } = req.query;
 
-        if(!postId || !Number.isInteger(postId)){
+        if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
@@ -105,10 +104,10 @@ const handleGetParentComments = async (req, res) => {
 
 const handleGetChildComments = async (req, res) => {
     try {
-        const parentId = Number(req.params.id);
+        const parentId = sanitizeId(req.params.id);
         const { limit = 5, lastFetchedTimestamp } = req.query;
 
-        if(!parentId || !Number.isInteger(parentId)){
+        if(!parentId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid parent comment id.' });
         }
 
