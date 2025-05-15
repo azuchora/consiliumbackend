@@ -5,7 +5,6 @@ const { getFile } = require('../model/files');
 const { deleteRefreshTokens, createRefreshToken } = require('../model/refreshTokens');
 const { generateAccessToken, generateRefreshToken, clearRefreshTokenCookie, setRefreshTokenCookie } = require('../services/tokenService');
 const { assignRole } = require('../model/roles');
-const { clearRefreshTokenCookie } = require('../services/tokenService');
 const ROLES = require('../config/roles');
 
 // In the future, when public API is accessible
