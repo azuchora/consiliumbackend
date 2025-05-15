@@ -15,7 +15,8 @@ const generateRefreshToken = ({ username, id }) => {
 
 const setRefreshTokenCookie = (res, refreshToken) => {
     res.cookie('jwt', refreshToken, {
-        secure: process.env.IS_PROD === 'true',
+        // secure: process.env.IS_PROD === 'true',
+        secure: true,
         maxAge: TOKENS.refresh.maxAge, 
         sameSite: 'None',
         httpOnly: true,
@@ -24,8 +25,9 @@ const setRefreshTokenCookie = (res, refreshToken) => {
 
 const clearRefreshTokenCookie = (res) => {
     res.clearCookie('jwt', {
+        secure: true,
         httpOnly: true,
-        secure: process.env.IS_PROD === 'true',
+        // secure: process.env.IS_PROD === 'true',
         sameSite: 'None', 
     });
 };

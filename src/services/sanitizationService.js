@@ -7,20 +7,11 @@ const sanitizeId = (input) => {
 }
 
 const isValidPassword = (password) => {
-    const isLengthOk = validator.isLength(password, {
-        min: LENGTH_LIMITS.password.min,
-        max: LENGTH_LIMITS.password.max
-    });
-
-    if(!isLengthOk) return false;
-
-    return validator.isStrongPassword(password, {
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-        returnScore: false
-    });
+    const PASSWORD_REGEX = new RegExp(
+        `^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%])[A-Za-z0-9!@#$%]{${LENGTH_LIMITS.password.min},${LENGTH_LIMITS.password.max}}$`
+    );
+    
+    return validator.matches(password, PASSWORD_REGEX);
 };
 
 const isValidEmail = (email) => {

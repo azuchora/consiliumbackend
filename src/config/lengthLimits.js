@@ -1,7 +1,7 @@
 const LENGTH_LIMITS = {
     username: {
         min: 3,
-        max: 32
+        max: 24
     },
     password: {
         min: 8,

@@ -10,7 +10,7 @@ const assignRole = async ({ userId, roleId }) => {
     }
 
     const result = await sql`
-        INSERT INTO user_roles(user_id, roleId)
+        INSERT INTO user_roles(user_id, role_id)
         VALUES (${userId}, ${roleId})
         RETURNING *
     `;

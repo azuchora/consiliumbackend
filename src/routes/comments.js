@@ -16,7 +16,6 @@ router.post('/posts/:id/comments',
 );
 
 router.get('/posts/:id/comments', handleGetParentComments);
-
 router.get('/comments/:id/replies', handleGetChildComments);
 
 module.exports = router;

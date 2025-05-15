@@ -3,15 +3,16 @@ const { getUser, getUserByRefreshToken } = require('../model/user');
 const { StatusCodes } = require('http-status-codes');
 const { deleteRefreshTokens, createRefreshToken } = require('../model/refreshTokens');
 const { generateAccessToken, generateRefreshToken, clearRefreshTokenCookie, setRefreshTokenCookie } = require('../services/tokenService');
+const { getRoles } = require('../model/roles');
 
 const handleRefreshToken = async (req, res) => {
     try {
         const cookies = req.cookies;
         if(!cookies.jwt) return res.sendStatus(StatusCodes.UNAUTHORIZED);
-
+        
         const refreshToken = cookies.jwt;
-        clearRefreshTokenCookie(res);
-
+        
+        // clearRefreshTokenCookie(res);
         const foundUser = await getUserByRefreshToken(refreshToken);
 
         if(!foundUser){
@@ -30,12 +31,11 @@ const handleRefreshToken = async (req, res) => {
             const foundRoles = await getRoles({ user_id: foundUser.id });
             const roles = foundRoles?.map(r => r.role_id);
             const accessToken = generateAccessToken({ username: foundUser.username, id: foundUser.id, roles });
-            const newRefreshToken = generateRefreshToken({ username, id: foundUser.id });
+            // const newRefreshToken = generateRefreshToken({ username: foundUser.username, id: foundUser.id });
 
-            await createRefreshToken({ userId: foundUser.id, refreshToken });
-            setRefreshTokenCookie(res, newRefreshToken);
-
-            return res.json({ accessToken });
+            // await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
+            // setRefreshTokenCookie(res, newRefreshToken);
+            return res.json({ accessToken, roles });
         });
     } catch (error) {
         console.error('RefreshToken error:', error);

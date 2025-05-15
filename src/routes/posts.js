@@ -16,7 +16,6 @@ router.post('/posts',
 );
 
 router.get('/posts', handleGetPosts);
-
 router.get('/posts/:id', handleGetPost);
 
 router.delete('/posts/:id', handleDeletePost);
