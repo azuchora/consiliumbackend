@@ -35,7 +35,7 @@ Projekt powstał jako część mojej pracy dyplomowej na kierunku Informatyka.
 1. Sklonuj repozytorium:
 
 ```bash
-git clone https://github.com/Rzanklod/consiliumbackend.git
+git clone https://github.com/azuchora/consiliumbackend.git
 cd consiliumbackend
 ```
 
