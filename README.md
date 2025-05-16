@@ -29,7 +29,7 @@ The project is part of my bachelor's thesis in Computer Science.
 
 ## 🚀 How to run the backend locally
 
-> ⚠️ The frontend is available here: [consiliumfrontend](https://github.com/Rzanklod/consiliumfrontend)  
+> ⚠️ The frontend is available here: [consiliumfrontend](https://github.com/azuchora/consiliumfrontend)  
 > 🐳 Docker support coming soon™
 
 1. Clone the repository:

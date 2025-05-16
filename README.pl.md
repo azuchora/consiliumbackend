@@ -29,7 +29,7 @@ Projekt powstał jako część mojej pracy dyplomowej na kierunku Informatyka.
 
 ## 🚀 Jak uruchomić backend lokalnie
 
-> ⚠️ Frontend znajduje się tutaj:: [consiliumfrontend](https://github.com/Rzanklod/consiliumfrontend)  
+> ⚠️ Frontend znajduje się tutaj:: [consiliumfrontend](https://github.com/azuchora/consiliumfrontend)  
 > 🐳 Docker wkrótce™
 
 1. Sklonuj repozytorium:
