@@ -35,7 +35,7 @@ The project is part of my bachelor's thesis in Computer Science.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/Rzanklod/consiliumbackend.git
+git clone https://github.com/azuchora/consiliumbackend.git
 cd consiliumbackend
 ```
 
