@@ -1,7 +1,7 @@
 const path = require('path')
 const { StatusCodes } = require('http-status-codes');
 
-const fileExtLimiter = (allowedExtArray) => {
+const fileExtLimiter = (extArray, blockMode = false) => {
     return (req, res, next) => {
         const files = req.files
         
@@ -19,10 +19,14 @@ const fileExtLimiter = (allowedExtArray) => {
             })
         })
 
-        const allowed = fileExtensions.every(ext => allowedExtArray.includes(ext))
+        const valid = blockMode
+            ? fileExtensions.every(ext => !extArray.includes(ext))
+            : fileExtensions.every(ext => extArray.includes(ext))
 
-        if(!allowed){
-            const message = `Upload failed. Only ${allowedExtArray.toString()} files allowed.`.replaceAll(',', ', ');
+        if(!valid){
+            const message = blockMode
+                ? `Upload failed. The following file types are not allowed: ${extArray.join(', ')}`
+                : `Upload failed. Only these file types are allowed: ${extArray.join(', ')}`;
 
             return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({ status: 'error', message });
         }

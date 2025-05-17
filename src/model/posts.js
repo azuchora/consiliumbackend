@@ -59,9 +59,12 @@ const getPaginatedPosts = async({ limit, lastFetchedTimestamp, filters = {} }) =
     }
 
     const result = await sql`
-        SELECT * FROM posts
+        SELECT posts.*, users.username, users.surname, users.name, files.filename avatar
+        FROM posts
+        JOIN users ON users.id = posts.user_id
+        JOIN files ON users.id = files.user_id
         WHERE ${whereClause}
-        ORDER BY created_at DESC
+        ORDER BY posts.created_at DESC
         LIMIT ${limit};
     `;
 

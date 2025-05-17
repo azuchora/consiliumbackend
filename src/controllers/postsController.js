@@ -100,7 +100,7 @@ const handleDeletePost = async (req, res) => {
 
 const handleGetPosts = async (req, res) => {
     try {
-        const { limit = 10, postStatusId, lastFetchedTimestamp } = req.query;
+        const { limit = 5, postStatusId, lastFetchedTimestamp } = req.query;
 
         const posts = await getPaginatedPosts({
             limit,

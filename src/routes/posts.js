@@ -5,12 +5,13 @@ const verifyJWT = require('../middleware/verifyJWT');
 const fileUpload = require('express-fileupload');
 const fileExtLimiter = require('../middleware/fileExtLimiter');
 const fileSizeLimiter = require('../middleware/fileSizeLimiter');
+const BLOCKED_EXTENSIONS = require('../config/blockedExtensions');
 
 router.use(verifyJWT);
 
 router.post('/posts', 
     fileUpload({ createParentPath: true }), 
-    fileExtLimiter(['.png', '.jpg', '.jpeg']), 
+    fileExtLimiter(BLOCKED_EXTENSIONS, true), 
     fileSizeLimiter, 
     handleNewPost
 );
