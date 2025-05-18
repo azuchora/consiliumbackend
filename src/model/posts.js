@@ -33,15 +33,15 @@ const createPost = async ({ userId, title, description }) => {
     return result[0];
 };
 
-const getPaginatedPosts = async({ limit, lastFetchedTimestamp, filters = {} }) => {
+const getPaginatedPosts = async({ limit, timestamp, filters = {} }) => {
     if(!limit){
         throw new Error('Missing required fields');
     }
 
     let whereClause = sql`1=1`;
 
-    if(lastFetchedTimestamp){
-        whereClause = sql`${whereClause} AND posts.created_at < ${lastFetchedTimestamp}`;
+    if(timestamp){
+        whereClause = sql`${whereClause} AND posts.created_at < ${timestamp}`;
     }
 
     const filterKeys = Object.keys(filters);

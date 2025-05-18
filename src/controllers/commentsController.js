@@ -72,7 +72,7 @@ const handleNewComment = async (req, res) => {
 const handleGetParentComments = async (req, res) => {
     try {
         const postId = sanitizeId(req.params.id);
-        const { limit = 10, lastFetchedTimestamp } = req.query;
+        const { limit = 10, timestamp } = req.query;
 
         if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
@@ -81,18 +81,18 @@ const handleGetParentComments = async (req, res) => {
         const comments = await getPaginatedParentComments({
             postId,
             limit,
-            lastFetchedTimestamp: lastFetchedTimestamp || null
+            timestamp: timestamp || null
         });
         
         const newLastFetchedTimestamp = comments.length > 0 
             ? comments[comments.length - 1].created_at 
-            : lastFetchedTimestamp;
+            : timestamp;
 
         return res.status(StatusCodes.OK).json({
             comments,
             pagination: {
                 limit,
-                lastFetchedTimestamp: newLastFetchedTimestamp,
+                timestamp: newLastFetchedTimestamp,
                 hasMore: comments.length === Number(limit)
             }
         });
@@ -105,7 +105,7 @@ const handleGetParentComments = async (req, res) => {
 const handleGetChildComments = async (req, res) => {
     try {
         const parentId = sanitizeId(req.params.id);
-        const { limit = 5, lastFetchedTimestamp } = req.query;
+        const { limit = 5, timestamp } = req.query;
 
         if(!parentId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid parent comment id.' });
@@ -114,18 +114,18 @@ const handleGetChildComments = async (req, res) => {
         const replies = await getPaginatedChildComments({ 
             parentId,
             limit,
-            lastFetchedTimestamp: lastFetchedTimestamp || null
+            timestamp: timestamp || null
         });
 
         const newLastFetchedTimestamp = replies.length > 0
             ? replies[replies.length - 1].created_at
-            : lastFetchedTimestamp;
+            : timestamp;
 
         return res.status(StatusCodes.OK).json({
             replies,
             pagination: {
                 limit,
-                lastFetchedTimestamp: newLastFetchedTimestamp,
+                timestamp: newLastFetchedTimestamp,
                 hasMore: replies.length === Number(limit)
             }
         });

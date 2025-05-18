@@ -21,15 +21,15 @@ const createComment = async ({ postId, userId, content, parentCommentId = null }
     return result[0];
 };
 
-const getPaginatedParentComments = async ({ postId, limit, lastFetchedTimestamp }) => {
+const getPaginatedParentComments = async ({ postId, limit, timestamp }) => {
     if(!postId || !limit){
         throw new Error('Missing required comment fields');
     }
 
     let whereClause = sql`post_id = ${postId} AND comment_id IS NULL`;
 
-    if(lastFetchedTimestamp){
-        whereClause = sql`${whereClause} AND created_at < ${lastFetchedTimestamp}`;
+    if(timestamp){
+        whereClause = sql`${whereClause} AND created_at < ${timestamp}`;
     }
 
     const result = await sql`
@@ -42,15 +42,15 @@ const getPaginatedParentComments = async ({ postId, limit, lastFetchedTimestamp 
     return await attachFiles(result, 'comment_id');
 };
 
-const getPaginatedChildComments = async ({ parentId, limit, lastFetchedTimestamp }) => {
+const getPaginatedChildComments = async ({ parentId, limit, timestamp }) => {
     if(!parentId || !limit){
         throw new Error('Missing required comment fields');
     }
 
     let whereClause = sql`comment_id = ${parentId}`;
 
-    if(lastFetchedTimestamp){
-        whereClause = sql`${whereClause} AND created_at < ${lastFetchedTimestamp}`;
+    if(timestamp){
+        whereClause = sql`${whereClause} AND created_at < ${timestamp}`;
     }
 
     const result = await sql`

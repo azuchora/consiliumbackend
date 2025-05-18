@@ -3,6 +3,7 @@ const { createPost, deletePost, getPost, getPostWithFiles, getPaginatedPosts } =
 const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
 const { sanitizeId } = require('../services/sanitizationService');
+const { censorFile } = require('../services/censorService');
 
 const handleNewPost = async (req, res) => {
     try {
@@ -16,20 +17,26 @@ const handleNewPost = async (req, res) => {
         const newPost = await createPost({ userId: user.id, title, description });
 
         const files = req.files;
-        const createdFiles = [];
+        let createdFiles = [];
         if(files)
         try {
+            const filePromises = [];
             for(const key of Object.keys(files)){
                 const fileField = files[key];
                 const fileArray = Array.isArray(fileField) ? fileField : [fileField];
-
-                for(const file of fileArray){
+                
+                const promises = fileArray.map(async (file) => {
                     const filename = await fileService.saveFile(file);
-                    createdFiles.push({ filename });
-                    await createFile({ filename, post_id: newPost.id});
-                }
+                    createdFiles.push(filename);
+                    await createFile({ filename, post_id: newPost.id });
+                    await censorFile(filename);
+                });
+                
+                filePromises.push(...promises);
             }
+            await Promise.all(filePromises);
         } catch (error){
+            console.log(error);
             for(const file of createdFiles){
                 await fileService.removeFile(file.filename);
             }
@@ -100,23 +107,23 @@ const handleDeletePost = async (req, res) => {
 
 const handleGetPosts = async (req, res) => {
     try {
-        const { limit = 5, postStatusId, lastFetchedTimestamp } = req.query;
+        const { limit = 5, postStatusId, timestamp } = req.query;
 
         const posts = await getPaginatedPosts({
             limit,
             postStatusId: postStatusId || null,
-            lastFetchedTimestamp: lastFetchedTimestamp || null
+            timestamp: timestamp || null
         });
         
         const newLastFetchedTimestamp = posts.length > 0 
             ? posts[posts.length - 1].created_at 
-            : lastFetchedTimestamp;
+            : timestamp;
 
         return res.status(StatusCodes.OK).json({
             posts,
             pagination: {
                 limit,
-                lastFetchedTimestamp: newLastFetchedTimestamp,
+                timestamp: newLastFetchedTimestamp,
                 hasMore: posts.length === Number(limit)
             }
         });
