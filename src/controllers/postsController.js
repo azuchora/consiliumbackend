@@ -118,7 +118,7 @@ const handleGetPosts = async (req, res) => {
         const newLastFetchedTimestamp = posts.length > 0 
             ? posts[posts.length - 1].created_at 
             : timestamp;
-
+        
         return res.status(StatusCodes.OK).json({
             posts,
             pagination: {

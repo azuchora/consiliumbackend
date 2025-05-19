@@ -62,12 +62,12 @@ const getPaginatedPosts = async({ limit, timestamp, filters = {} }) => {
         SELECT posts.*, users.username, users.surname, users.name, files.filename avatar
         FROM posts
         JOIN users ON users.id = posts.user_id
-        JOIN files ON users.id = files.user_id
+        LEFT JOIN files ON users.id = files.user_id
         WHERE ${whereClause}
         ORDER BY posts.created_at DESC
         LIMIT ${limit};
     `;
-
+    
     return await attachFiles(result, 'post_id');
 }
 
