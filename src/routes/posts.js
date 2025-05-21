@@ -6,8 +6,11 @@ const fileUpload = require('express-fileupload');
 const fileExtLimiter = require('../middleware/fileExtLimiter');
 const fileSizeLimiter = require('../middleware/fileSizeLimiter');
 const BLOCKED_EXTENSIONS = require('../config/blockedExtensions');
+const verifyRoles = require('../middleware/verifyRoles');
+const ROLES = require('../config/roles');
 
 router.use(verifyJWT);
+router.use(verifyRoles(ROLES.Admin, ROLES.Moderator, ROLES.Verified));
 
 router.post('/posts', 
     fileUpload({ createParentPath: true }), 

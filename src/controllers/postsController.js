@@ -59,7 +59,7 @@ const handleGetPost = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
-        const foundPost = await getPostWithFiles({ id: postId });
+        const [foundPost] = await getPaginatedPosts({ limit: 1, filters: { id: postId }});
 
         if(!foundPost){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });

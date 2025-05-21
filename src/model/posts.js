@@ -7,18 +7,6 @@ const getPosts = (filters = {}) => getManyByFilters('posts', filters);
 const updatePost = (filters = {}, updatedData = {}) => updateByFilters('posts', filters, updatedData);
 const deletePost = (filters = {}) => deleteByFilters('posts', filters);
 
-const getPostWithFiles = async (filters = {}) => {
-    const post = await getPost(filters);
-    
-    if(!post){
-        throw new Error('Post not found,');
-    }
-
-    const postWithFiles = await attachFiles([post], 'post_id');
-
-    return postWithFiles[0];
-};
-
 const createPost = async ({ userId, title, description }) => {
     if(!userId || !title || !description){
         throw new Error('Missing required post fields.');
@@ -77,6 +65,5 @@ module.exports = {
     updatePost,
     deletePost,
     createPost,
-    getPostWithFiles,
     getPaginatedPosts,
 }

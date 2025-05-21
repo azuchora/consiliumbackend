@@ -35,7 +35,7 @@ const handleRefreshToken = async (req, res) => {
 
             // await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
             // setRefreshTokenCookie(res, newRefreshToken);
-            return res.json({ accessToken, roles });
+            return res.json({ accessToken, roles, });
         });
     } catch (error) {
         console.error('RefreshToken error:', error);

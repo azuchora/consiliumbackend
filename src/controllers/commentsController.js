@@ -4,6 +4,8 @@ const { getComment, createComment, deleteComment, getPaginatedParentComments, ge
 const fileService = require('../services/fileService');
 const { createFile } = require('../model/files');
 const { sanitizeId, isValidComment } = require('../services/sanitizationService');
+const { emitNewComment } = require('../socket/comments');
+const { sockets } = require('../socket');
 
 const handleNewComment = async (req, res) => {
     try {
@@ -62,6 +64,8 @@ const handleNewComment = async (req, res) => {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error while saving attachments.' });
         }
 
+        emitNewComment(sockets.comments, postId, newComment);
+        // console.log(newComment)
         return res.status(StatusCodes.OK).json({ comment: newComment });
     } catch (error){
         console.error('newComment error: ', error);

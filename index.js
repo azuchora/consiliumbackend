@@ -13,11 +13,14 @@ const postsRouter = require('./src/routes/posts');
 const usersRouter = require('./src/routes/users');
 const commentsRouter = require('./src/routes/comments');
 const path = require('path');
+const { setupSockets } = require('./src/socket');
+const http = require('http');
 
 const APP_PORT = process.env.APP_PORT || 3300;
 const API_ROUTE = process.env.API_ROUTE;
 
 const app = express();
+const server = http.createServer(app);
 
 app.use(credentials);
 app.use(cors(corsOptions));
@@ -36,11 +39,13 @@ app.use(`${API_ROUTE}`, postsRouter);
 app.use(`${API_ROUTE}`, usersRouter);
 app.use(`${API_ROUTE}`, commentsRouter);
 
-app.get('/*', async (req, res, next) => {
-    if(req.path.startsWith('/static')) return next();
+
+setupSockets(server);
+
+app.get('/*', async (req, res) => {
     res.send('hello world');
 })
 
-app.listen(APP_PORT, () => {
+server.listen(APP_PORT, () => {
     console.log(`App listening on port ${APP_PORT}`);
 });

@@ -38,7 +38,7 @@ const isValidUsername = (username) => {
 const isValidComment = (content) => {
     if(!content) return false;
 
-    return content.length < LENGTH_LIMITS.comment.min || content.length > LENGTH_LIMITS.comment.max;
+    return content.length >= LENGTH_LIMITS.comment.min && content.length <= LENGTH_LIMITS.comment.max;
 };
 
 module.exports = {
