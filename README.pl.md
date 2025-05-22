@@ -4,7 +4,7 @@
 
 ## 📌 Description
 
-To repozytorium zawiera backendowe REST API dla aplikacji **CONSILIUM** – bezpiecznej platformy dyskusyjnej dla lekarzy. API zostało stworzone w technologii **Express.js**, z wykorzystaniem ręcznie pisanych zapytań SQL (bez ORM) oraz bazy danych **PostgreSQL**.
+To repozytorium zawiera backendowe REST API dla aplikacji **CONSILIUM** – bezpiecznej platformy dyskusyjnej dla lekarzy. API zostało stworzone w technologii **Express.js**, z wykorzystaniem mapowania relacyjno-obiektowego **PRISMA** oraz bazy danych **PostgreSQL**.
 
 Projekt powstał jako część mojej pracy dyplomowej na kierunku Informatyka.
 
@@ -12,7 +12,6 @@ Projekt powstał jako część mojej pracy dyplomowej na kierunku Informatyka.
 
 - REST API oparte na **Express.js**
 - Uwierzytelnianie z użyciem **JWT** oraz kontrola dostępu na podstawie ról
-- Ręcznie pisane zapytania SQL (bez ORM) z użyciem **PostgreSQL**
 - Operacje CRUD dla:
   - Użytkowników (lekarzy)
   - Wątków
@@ -22,7 +21,7 @@ Projekt powstał jako część mojej pracy dyplomowej na kierunku Informatyka.
 
 ## 🛠️ Technologie
 
-- **Node.js** + **Express.js**
+- **Node.js** + **Express.js** + **PRISMA ORM**
 - **PostgreSQL**
 - **JWT** do uwierzytelniania
 - **Redis** *(soon™)*
@@ -48,14 +47,15 @@ npm install
 3. Utwórz plik .env w katalogu głównym:
 
 ```bash
-PGHOST=your_db_host
-PGPORT=your_db_port
-PGPASSWORD=your_db_password
-PGUSER=your_db_user
-PGDATABASE=your_db
+DATABASE_URL=your_db_url
 ACCESS_TOKEN_SECRET=your_secret
 REFRESH_TOKEN_SECRET=your_secret
 API_ROUTE=/api/v1
+```
+5. Wygeneruj klient prismy
+
+```bash
+npx prisma generate
 ```
 
 4. Uruchom serwer:

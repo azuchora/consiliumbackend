@@ -4,7 +4,7 @@
 
 ## 📌 Description
 
-This repository contains the backend REST API for **CONSILIUM** – a secure discussion platform for medical professionals. The API was built using **Express.js**, with raw SQL queries (no ORM) and a **PostgreSQL** database.
+This repository contains the backend REST API for **CONSILIUM** – a secure discussion platform for medical professionals. The API was built using **Express.js**, with **PRISMA ORM** and a **PostgreSQL** database.
 
 The project is part of my bachelor's thesis in Computer Science.
 
@@ -12,7 +12,6 @@ The project is part of my bachelor's thesis in Computer Science.
 
 - RESTful API built with **Express.js**
 - **JWT-based authentication** and role-based access control
-- Manual SQL queries (no ORM) with **PostgreSQL**
 - CRUD operations for:
   - Users (doctors)
   - Topics
@@ -22,7 +21,7 @@ The project is part of my bachelor's thesis in Computer Science.
 
 ## 🛠️ Technologies
 
-- **Node.js** + **Express.js**
+- **Node.js** + **Express.js** + **PRISMA ORM**
 - **PostgreSQL**
 - **JWT** for authentication
 - **Redis** *(soon™)*
@@ -48,17 +47,19 @@ npm install
 3. Create .env file in the root directory:
 
 ```bash
-PGHOST=your_db_host
-PGPORT=your_db_port
-PGPASSWORD=your_db_password
-PGUSER=your_db_user
-PGDATABASE=your_db
+DATABASE_URL=your_db_url
 ACCESS_TOKEN_SECRET=your_secret
 REFRESH_TOKEN_SECRET=your_secret
 API_ROUTE=/api/v1
 ```
 
-4. Start the server:
+4. Generate prisma client
+
+```bash
+npx prisma generate
+```
+
+5. Start the server:
 
 ```bash
 npm run dev
