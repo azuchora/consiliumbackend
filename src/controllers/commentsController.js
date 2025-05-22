@@ -6,6 +6,8 @@ const { createFile } = require('../model/files');
 const { sanitizeId, isValidComment } = require('../services/sanitizationService');
 const { emitNewComment } = require('../socket/comments');
 const { sockets } = require('../socket');
+const ROLES = require('../config/roles');
+const { censorFile } = require('../services/censorService');
 
 const handleNewComment = async (req, res) => {
     try {
@@ -44,18 +46,22 @@ const handleNewComment = async (req, res) => {
         const createdFiles = [];
         if(files)
         try {
+            const filePromises = [];
             for(const key of Object.keys(files)){
                 const fileField = files[key];
                 const fileArray = Array.isArray(fileField) ? fileField : [fileField];
 
-                for(const file of fileArray){
+                const promises = fileArray.map(async (file) => {
                     const filename = await fileService.saveFile(file);
                     createdFiles.push({ filename });
                     await createFile({ filename, comment_id: newComment.id});
-                }
+                    await censorFile(filename);
+                });
 
-                newComment.files = createdFiles;
+                filePromises.push(...promises);
             }
+            await Promise.all(filePromises);
+            newComment.files = createdFiles;
         } catch (error){
             for(const file of createdFiles){
                 await fileService.removeFile(file.filename);
@@ -139,8 +145,39 @@ const handleGetChildComments = async (req, res) => {
     }
 };
 
+const handleDeleteComment = async (req, res) => {
+    try {
+        const id = sanitizeId(req.params.id);
+        const user = req.user;
+
+        if(!id){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment id.' });
+        }
+
+        const foundComment = await getComment({ user_id: req.user.id });
+
+        if(!foundComment){
+            return res.status(StatusCodes.NOT_FOUND);
+        }
+
+        const isAllowed = user.roles.includes(ROLES.Admin) || foundComment.user_id == user.id;
+
+        if(!isAllowed){
+            return res.status(StatusCodes.FORBIDDEN);
+        }
+
+        await deleteComment({ id: foundComment.id });
+
+        return res.status(StatusCodes.NO_CONTENT);
+    } catch(error){
+        console.error('getChildComments: ', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+}
+
 module.exports = {
     handleNewComment,
     handleGetParentComments,
     handleGetChildComments,
+    handleDeleteComment,
 };
