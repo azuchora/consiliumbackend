@@ -54,7 +54,7 @@ const handleNewComment = async (req, res) => {
                 const promises = fileArray.map(async (file) => {
                     const filename = await fileService.saveFile(file);
                     createdFiles.push({ filename });
-                    await createFile({ filename, comment_id: newComment.id});
+                    await createFile({ filename, commentId: newComment.id});
                     await censorFile(filename);
                 });
 
@@ -93,9 +93,11 @@ const handleGetParentComments = async (req, res) => {
             limit,
             timestamp: timestamp || null
         });
+
+        console.log(comments);
         
         const newLastFetchedTimestamp = comments.length > 0 
-            ? comments[comments.length - 1].created_at 
+            ? comments[comments.length - 1].createdAt
             : timestamp;
 
         return res.status(StatusCodes.OK).json({
@@ -128,7 +130,7 @@ const handleGetChildComments = async (req, res) => {
         });
 
         const newLastFetchedTimestamp = replies.length > 0
-            ? replies[replies.length - 1].created_at
+            ? replies[replies.length - 1].createdAt
             : timestamp;
 
         return res.status(StatusCodes.OK).json({
@@ -154,13 +156,13 @@ const handleDeleteComment = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment id.' });
         }
 
-        const foundComment = await getComment({ user_id: req.user.id });
+        const foundComment = await getComment({ userId: req.user.id });
 
         if(!foundComment){
             return res.status(StatusCodes.NOT_FOUND);
         }
 
-        const isAllowed = user.roles.includes(ROLES.Admin) || foundComment.user_id == user.id;
+        const isAllowed = user.roles.includes(ROLES.Admin) || foundComment.userId == user.id;
 
         if(!isAllowed){
             return res.status(StatusCodes.FORBIDDEN);

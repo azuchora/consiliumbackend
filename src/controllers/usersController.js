@@ -33,7 +33,7 @@ const handleUploadAvatar = async (req, res) => {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to save avatar. '});
         }
 
-        const existingAvatar = await getFile({ user_id: userId });
+        const existingAvatar = await getFile({ userId: userId });
 
         try {
             if(existingAvatar){
@@ -42,7 +42,7 @@ const handleUploadAvatar = async (req, res) => {
                 await updateFile({ id: oldAvatar.id }, { filename });
                 await fileService.removeFile(oldAvatar.filename);
             } else{
-                await createFile({ filename, user_id: userId });
+                await createFile({ filename, userId });
             }
         } catch (error){
             await fileService.removeFile(filename);
@@ -65,7 +65,7 @@ const handleGetAvatar = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user ID.' });
         }
 
-        const foundAvatar = await getFile({ user_id: userId });
+        const foundAvatar = await getFile({ userId: userId });
         
         return res.status(StatusCodes.OK).json({ avatarFilename: foundAvatar ? foundAvatar.filename : null });
     } catch (error){
@@ -82,11 +82,11 @@ const handleGetUser = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user ID.' });
         }
 
-        const { id, username, created_at } = await getUser({ id: userId });
+        const { id, username, createdAt } = await getUser({ id: userId });
         const user = {
             id,
             username,
-            created_at
+            createdAt
         }
         
         return res.status(StatusCodes.OK).json({ user })

@@ -1,5 +1,5 @@
-const { createFile, getFiles } = require('../model/files');
-const { createPost, deletePost, getPost, getPostWithFiles, getPaginatedPosts } = require('../model/posts');
+const { createFile } = require('../model/files');
+const { createPost, deletePost, getPost, getPaginatedPosts } = require('../model/posts');
 const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
 const { sanitizeId } = require('../services/sanitizationService');
@@ -15,7 +15,7 @@ const handleNewPost = async (req, res) => {
         }
         
         const newPost = await createPost({ userId: user.id, title, description });
-
+        
         const files = req.files;
         let createdFiles = [];
         if(files)
@@ -28,7 +28,7 @@ const handleNewPost = async (req, res) => {
                 const promises = fileArray.map(async (file) => {
                     const filename = await fileService.saveFile(file);
                     createdFiles.push(filename);
-                    await createFile({ filename, post_id: newPost.id });
+                    await createFile({ filename, postId: newPost.id });
                     await censorFile(filename);
                 });
                 
@@ -59,7 +59,7 @@ const handleGetPost = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
-        const [foundPost] = await getPaginatedPosts({ limit: 1, filters: { id: postId }});
+        const foundPost = await getPost({ id: postId });
 
         if(!foundPost){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
@@ -91,7 +91,7 @@ const handleDeletePost = async (req, res) => {
             return res.status(StatusCodes.FORBIDDEN).json({ message: 'No permission to delete post.' });
         }
 
-        const postFiles = await getFiles({ post_id: postId });
+        const postFiles = foundPost.files;
         for(const file of postFiles){
             await fileService.removeFile(file.filename);
         }
@@ -114,9 +114,9 @@ const handleGetPosts = async (req, res) => {
             postStatusId: postStatusId || null,
             timestamp: timestamp || null
         });
-        
+
         const newLastFetchedTimestamp = posts.length > 0 
-            ? posts[posts.length - 1].created_at 
+            ? posts[posts.length - 1].createdAt
             : timestamp;
         
         return res.status(StatusCodes.OK).json({

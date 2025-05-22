@@ -1,47 +1,73 @@
-const sql = require('../db/client');
-const { getOneByFilters, getManyByFilters, updateByFilters, deleteByFilters } = require('../db/queries');
+const { prisma } = require('../db/client');
 
-const getFile = (filters = {}) => getOneByFilters('files', filters);
-const getFiles = (filters = {}) => getManyByFilters('files', filters);
-const updateFile = (filters = {}, updatedData = {}) => updateByFilters('files', filters, updatedData);
-const deleteFile = (filters = {}) => deleteByFilters('files', filters);
+const getFile = (filters = {}) => {
+  return prisma.files.findFirst({
+    where: filters,
+  });
+};
+
+const getFiles = (filters = {}) => {
+  return prisma.files.findMany({
+    where: filters,
+  });
+};
+
+const updateFile = async (filters = {}, updatedData = {}) => {
+  const filterKeys = Object.keys(filters);
+  if(filterKeys.length !== 1){
+    throw new Error('Exactly one filter is required for update.');
+  }
+
+  const where = {};
+  where[filterKeys[0]] = filters[filterKeys[0]];
+
+  return prisma.files.update({
+    where,
+    data: updatedData,
+  });
+};
+
+const deleteFile = (filters = {}) => {
+  const filterKeys = Object.keys(filters);
+  if(filterKeys.length !== 1){
+    throw new Error('Exactly one filter is required for delete.');
+  }
+
+  const where = {};
+  where[filterKeys[0]] = filters[filterKeys[0]];
+
+  return prisma.files.delete({
+    where,
+  });
+};
 
 const createFile = async (fileData = {}) => {
-    const keys = Object.keys(fileData);
+  const keys = Object.keys(fileData);
 
-    if(keys.length === 0){
-        throw new Error('No file data provided');
-    }
+  if(keys.length === 0){
+    throw new Error('No file data provided');
+  }
 
-    const refKeys = ['user_id', 'post_id', 'comment_id'];
-    const refCount = refKeys.filter(key => fileData[key] != null).length;
+  const refKeys = ['userId', 'postId', 'commentId'];
+  const refCount = refKeys.filter(key => fileData[key] != null).length;
 
-    if(refCount !== 1){
-        throw new Error('Exactly one of user_id, post_id, or comment_id must be provided.');
-    }
+  if(refCount !== 1){
+    throw new Error('Exactly one of userId, postId, or commentId must be provided.');
+  }
 
-    if(!fileData.filename){
-        throw new Error('Filename is required');
-    }
+  if(!fileData.filename){
+    throw new Error('Filename is required');
+  }
 
-    const columns = keys;
-    const values = keys.map((key) => sql`${fileData[key]}`);
-    const combinedValues = values.reduce((prev, curr, i) =>
-         i === 0 ? curr : sql`${prev}, ${curr}`)
-
-    const result = await sql`
-        INSERT INTO files (${sql(columns)})
-        VALUES (${combinedValues})
-        RETURNING *
-    `;
-
-    return result[0];
+  return prisma.files.create({
+    data: fileData,
+  });
 };
 
 module.exports = {
-    getFile,
-    getFiles,
-    updateFile,
-    createFile,
-    deleteFile,
-}
+  getFile,
+  getFiles,
+  updateFile,
+  createFile,
+  deleteFile,
+};

@@ -26,7 +26,12 @@ const handleNewUser = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid email address.' });
         }
 
-        const existingUser = [await getUser({ username }), await getUser({ email })].filter(Boolean); 
+        const existingUser = await getUser({
+            OR: [
+                { username },
+                { email },
+            ]
+        });
         
         if(existingUser.length > 0){
             return res.status(StatusCodes.CONFLICT).json({ message: 'User with this username or email already exists.' });
@@ -36,7 +41,7 @@ const handleNewUser = async (req, res) => {
 
         const newUser = await createUser({
             username,
-            hashed_password: hashedPassword,
+            hashedPassword: hashedPassword,
             email: normalizeEmail(email),
         });
 

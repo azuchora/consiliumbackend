@@ -1,69 +1,162 @@
-const sql = require('../db/client');
-const { getOneByFilters, getManyByFilters, updateByFilters, deleteByFilters } = require('../db/queries');
-const { attachFiles } = require('../services/fileAttachmentService');
+const { prisma } = require('../db/client');
 
-const getPost = (filters = {}) => getOneByFilters('posts', filters);
-const getPosts = (filters = {}) => getManyByFilters('posts', filters);
-const updatePost = (filters = {}, updatedData = {}) => updateByFilters('posts', filters, updatedData);
-const deletePost = (filters = {}) => deleteByFilters('posts', filters);
-
-const createPost = async ({ userId, title, description }) => {
-    if(!userId || !title || !description){
-        throw new Error('Missing required post fields.');
-    }
-
-    const result = await sql`
-        INSERT INTO posts(user_id, title, description)
-        VALUES (${userId}, ${title}, ${description})
-        RETURNING *
-    `;
-   
-    return result[0];
+const getPost = (filters = {}) => {
+  return prisma.posts.findFirst({
+    where: filters,
+    include: {
+      users: {
+        select: {
+          id: true,
+          username: true,
+          surname: true,
+          name: true,
+          files: {
+            select: {
+              id: true,
+              filename: true,
+              createdAt: true,
+            },
+          },
+        },
+      },
+      files: {
+        select: {
+          id: true,
+          filename: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
 };
 
-const getPaginatedPosts = async({ limit, timestamp, filters = {} }) => {
-    if(!limit){
-        throw new Error('Missing required fields');
-    }
+const getPosts = (filters = {}) => {
+  return prisma.posts.findMany({
+    where: filters,
+    include: {
+      users: {
+        select: {
+          id: true,
+          username: true,
+          surname: true,
+          name: true,
+          files: {
+            select: {
+              id: true,
+              filename: true,
+              createdAt: true,
+            },
+          },
+        },
+      },
+      files: {
+        select: {
+          id: true,
+          filename: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+};
 
-    let whereClause = sql`1=1`;
+const updatePost = (filters = {}, updatedData = {}) => {
+  return prisma.posts.updateMany({
+    where: filters,
+    data: updatedData,
+  });
+};
 
-    if(timestamp){
-        whereClause = sql`${whereClause} AND posts.created_at < ${timestamp}`;
-    }
+const deletePost = (filters = {}) => {
+  return prisma.posts.deleteMany({
+    where: filters,
+  });
+};
 
-    const filterKeys = Object.keys(filters);
+const createPost = async ({ userId, title, description }) => {
+  if(!userId || !title || !description){
+    throw new Error('Missing required post fields.');
+  }
 
-    if(filterKeys.length > 0){
-        const conditions = filterKeys.map(key => 
-            sql`${sql.unsafe(`posts.${key}`)} = ${filters[key]}`
-        );
+  return await prisma.posts.create({
+    data: {
+      userId,
+      title,
+      description,
+    },
+    include: {
+      users: {
+        select: {
+          id: true,
+          username: true,
+          surname: true,
+          name: true,
+          files: {
+            select: {
+              id: true,
+              filename: true,
+              createdAt: true,
+            },
+          },
+        },
+      },
+      files: {
+        select: {
+          id: true,
+          filename: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+};
 
-        const combinedFilters = conditions.reduce((prev, curr) =>
-            sql`${prev} AND ${curr}`
-        );
+const getPaginatedPosts = async ({ limit, timestamp, filters = {} }) => {
+  if(!limit){
+    throw new Error('Missing required fields');
+  }
 
-        whereClause = sql`${whereClause} AND ${combinedFilters}`;
-    }
+  const where = {
+    ...filters,
+    ...(timestamp ? { createdAt: { lt: new Date(timestamp) } } : {}),
+  };
 
-    const result = await sql`
-        SELECT posts.*, users.username, users.surname, users.name, files.filename avatar
-        FROM posts
-        JOIN users ON users.id = posts.user_id
-        LEFT JOIN files ON users.id = files.user_id
-        WHERE ${whereClause}
-        ORDER BY posts.created_at DESC
-        LIMIT ${limit};
-    `;
-    
-    return await attachFiles(result, 'post_id');
-}
+  return await prisma.posts.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      users: {
+        select: {
+          id: true,
+          username: true,
+          surname: true,
+          name: true,
+          files: {
+            select: {
+              id: true,
+              filename: true,
+              createdAt: true,
+            },
+          },
+        },
+      },
+      files: {
+        select: {
+          id: true,
+          filename: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+};
 
 module.exports = {
-    getPost,
-    getPosts,
-    updatePost,
-    deletePost,
-    createPost,
-    getPaginatedPosts,
-}
+  getPost,
+  getPosts,
+  updatePost,
+  deletePost,
+  createPost,
+  getPaginatedPosts,
+};

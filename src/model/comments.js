@@ -1,74 +1,106 @@
-const sql = require('../db/client');
-const { getOneByFilters, getManyByFilters, updateByFilters, deleteByFilters } = require('../db/queries');
-const { attachFiles } = require('../services/fileAttachmentService');
+const { prisma } = require('../db/client');
 
-const getComment = (filters = {}) => getOneByFilters('comments', filters);
-const getComments = (filters = {}) => getManyByFilters('comments', filters);
-const updateComment = (filters = {}, updatedData = {}) => updateByFilters('comments', filters, updatedData);
-const deleteComment = (filters = {}) => deleteByFilters('comments', filters);
+const getComment = (filters = {}) => {
+  return prisma.comments.findFirst({
+    where: filters,
+    include: {
+      users: true,
+      files: true,
+    },
+  });
+};
+
+const getComments = (filters = {}) => {
+  return prisma.comments.findMany({
+    where: filters,
+    include: {
+      users: true,
+      files: true,
+    },
+  });
+};
+
+const updateComment = (filters = {}, updatedData = {}) => {
+  return prisma.comments.updateMany({
+    where: filters,
+    data: updatedData,
+  });
+};
+
+const deleteComment = (filters = {}) => {
+  return prisma.comments.deleteMany({
+    where: filters,
+  });
+};
 
 const createComment = async ({ postId, userId, content, parentCommentId = null }) => {
-    if(!userId || !content || !postId){
-        throw new Error('Missing required comment fields.');
-    }
+  if(!userId || !content || !postId){
+    throw new Error('Missing required comment fields.');
+  }
 
-    const result = await sql`
-        INSERT INTO comments(post_id, user_id, content, comment_id)
-        VALUES (${postId}, ${userId}, ${content}, ${parentCommentId})
-        RETURNING *
-    `;
-   
-    return result[0];
+  return await prisma.comments.create({
+    data: {
+      postId: postId,
+      userId: userId,
+      content: content,
+      commentId: parentCommentId,
+    },
+    include: {
+      users: true,
+      files: true,
+    },
+  });
 };
 
 const getPaginatedParentComments = async ({ postId, limit, timestamp }) => {
-    if(!postId || !limit){
-        throw new Error('Missing required comment fields');
-    }
+  if(!postId || !limit){
+    throw new Error('Missing required comment fields');
+  }
 
-    let whereClause = sql`post_id = ${postId} AND comment_id IS NULL`;
+  const where = {
+    postId: postId,
+    commentId: null,
+    ...(timestamp && { createdAt: { lt: new Date(timestamp) } }),
+  };
 
-    if(timestamp){
-        whereClause = sql`${whereClause} AND created_at < ${timestamp}`;
-    }
-
-    const result = await sql`
-        SELECT * FROM comments
-        WHERE ${whereClause}
-        ORDER BY created_at DESC
-        LIMIT ${limit};
-    `;
-      
-    return await attachFiles(result, 'comment_id');
+  return await prisma.comments.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      users: true,
+      files: true,
+    },
+  });
 };
 
 const getPaginatedChildComments = async ({ parentId, limit, timestamp }) => {
-    if(!parentId || !limit){
-        throw new Error('Missing required comment fields');
-    }
+  if(!parentId || !limit){
+    throw new Error('Missing required comment fields');
+  }
 
-    let whereClause = sql`comment_id = ${parentId}`;
+  const where = {
+    commentId: parentId,
+    ...(timestamp && { createdAt: { lt: new Date(timestamp) } }),
+  };
 
-    if(timestamp){
-        whereClause = sql`${whereClause} AND created_at < ${timestamp}`;
-    }
-
-    const result = await sql`
-        SELECT * FROM comments
-        WHERE ${whereClause}
-        ORDER BY created_at DESC
-        LIMIT ${limit};
-    `;
-
-    return await attachFiles(result, 'comment_id');
+  return await prisma.comments.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      users: true,
+      files: true,
+    },
+  });
 };
 
 module.exports = {
-    getComment,
-    getComments,
-    updateComment,
-    deleteComment,
-    createComment,
-    getPaginatedParentComments,
-    getPaginatedChildComments,
-}
+  getComment,
+  getComments,
+  updateComment,
+  deleteComment,
+  createComment,
+  getPaginatedParentComments,
+  getPaginatedChildComments,
+};

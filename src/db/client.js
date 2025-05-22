@@ -1,11 +1,5 @@
-const postgres = require('postgres');
+const { PrismaClient } = require('../generated/prisma');
 
-const postgresConnection = postgres({
-    host: process.env.PGHOST,
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE,
-    port: process.env.PGPORT,
-});
+const prisma = new PrismaClient();
 
-module.exports = postgresConnection;
+module.exports = { prisma };

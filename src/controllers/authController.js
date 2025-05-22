@@ -1,8 +1,7 @@
 const bcrypt = require('bcrypt');
 const { StatusCodes } = require('http-status-codes');
-const { getUserByRefreshToken, getUserWithRoles } = require('../model/user');                   
-const { getFile } = require('../model/files');
-const { deleteRefreshTokens, createRefreshToken } = require('../model/refreshTokens');
+const { getUser } = require('../model/user');                   
+const { deleteRefreshTokens, createRefreshToken, getRefreshToken } = require('../model/refreshTokens');
 const { generateAccessToken, generateRefreshToken, clearRefreshTokenCookie, setRefreshTokenCookie } = require('../services/tokenService');
 const { assignRole } = require('../model/roles');
 const ROLES = require('../config/roles');
@@ -42,35 +41,37 @@ const handleLogin = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Username and password are required.' });
         }
         
-        const foundUser = await getUserWithRoles({ username });
+        const foundUser = await getUser({ username });
         
         if(!foundUser){
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid username or password.' });
         }
     
-        const match = await bcrypt.compare(password, foundUser.hashed_password);
+        const match = await bcrypt.compare(password, foundUser.hashedPassword);
         if(!match){
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid username or password.' });
         }
         
-        const accessToken = generateAccessToken({ username, id: foundUser.id, roles: foundUser.roles });
-        const newRefreshToken = generateRefreshToken({ username, id: foundUser.id, roles: foundUser.roles });
+        const roles = foundUser.userRoles.map(ur => ur.roleId);
 
-        const avatarFilename = (await getFile({ user_id: foundUser.id }))?.filename;
+        const accessToken = generateAccessToken({ username, id: foundUser.id, roles });
+        const newRefreshToken = generateRefreshToken({ username, id: foundUser.id, roles });
+
+        const avatarFilename = foundUser?.files[0]?.filename;
         
         const user = {
             username: foundUser.username,
             id: foundUser.id,
             avatarFilename: avatarFilename ? avatarFilename : null,
-            roles: foundUser.roles,
+            roles,
         };
         
         if(cookies?.jwt){
             const refreshToken = cookies.jwt;
-            const foundToken = await getUserByRefreshToken(refreshToken);
+            const foundToken = await getRefreshToken({ token: refreshToken });
 
             if(!foundToken){
-                await deleteRefreshTokens({ user_id: foundUser.id });
+                await deleteRefreshTokens({ userId: foundUser.id });
             }
             
             clearRefreshTokenCookie(res);
@@ -123,7 +124,8 @@ const handleLogout = async (req, res) => {
         if(!cookies.jwt) return res.sendStatus(StatusCodes.NO_CONTENT);
         
         const refreshToken = cookies.jwt;
-        const foundUser = await getUserByRefreshToken(refreshToken);
+        const foundToken = await getRefreshToken({ token: refreshToken });
+        const foundUser = foundToken?.users;
 
         if(!foundUser){
             clearRefreshTokenCookie(res);

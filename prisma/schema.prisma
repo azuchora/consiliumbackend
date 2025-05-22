@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model comments {
+  id            Int        @id @default(autoincrement())
+  postId        Int        @map("post_id")
+  userId        Int?       @map("user_id")
+  commentId     Int?       @map("comment_id")
+  createdAt     DateTime?  @map("created_at") @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?  @map("updated_at") @default(now()) @db.Timestamptz(6)
+  content       String?    @db.VarChar
+  comments      comments?  @relation("commentsTocomments", fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_fkey")
+  otherComments comments[] @relation("commentsTocomments")
+  posts         posts      @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_fkey")
+  users         users?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fkey")
+  files         files[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model files {
+  id         Int       @id(map: "post_attachments_pkey") @default(autoincrement())
+  filename   String    @db.VarChar
+  postId     Int?      @map("post_id")
+  createdAt  DateTime? @map("created_at") @default(now()) @db.Timestamptz(6)
+  userId     Int?      @map("user_id")
+  commentId  Int?      @map("comment_id")
+  comments   comments? @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_fk")
+  posts      posts?    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_fk")
+  users      users?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "usesr_fk")
+}
+
+model post_statuses {
+  id    Int     @id @default(autoincrement())
+  name  String  @db.VarChar
+  posts posts[]
+}
+
+model posts {
+  id            Int            @id @default(autoincrement())
+  description   String         @db.VarChar
+  createdAt     DateTime?      @map("created_at") @default(now()) @db.Timestamptz(6)
+  isAnswered    Boolean?       @map("is_answered") @default(false)
+  title         String         @db.VarChar
+  userId        Int            @map("user_id")
+  postStatusId  Int?           @map("post_status_id")
+  comments      comments[]
+  files         files[]
+  postStatuses  post_statuses? @relation(fields: [postStatusId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_statuses_fk")
+  users         users          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fk")
+}
+
+model refresh_tokens {
+  id         Int       @id @default(autoincrement())
+  token      String    @db.VarChar
+  userId     Int       @map("user_id")
+  createdAt  DateTime? @map("created_at") @default(now()) @db.Timestamptz(6)
+  users      users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fk")
+}
+
+model roles {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar
+  userRoles  user_roles[]
+}
+
+model user_roles {
+  id      Int   @id @default(autoincrement())
+  userId  Int   @map("user_id")
+  roleId  Int   @map("role_id")
+  roles   roles @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "roles_fk")
+  users   users @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fk")
+}
+
+model users {
+  id              Int              @id @default(autoincrement())
+  username        String           @unique(map: "username_unique") @db.VarChar
+  hashedPassword  String           @map("hashed_password") @db.VarChar
+  createdAt       DateTime?        @map("created_at") @default(now()) @db.Timestamptz(6)
+  email           String           @db.VarChar
+  pesel           String[]         @db.VarChar(11)
+  name            String?          @db.VarChar
+  surname         String?          @db.VarChar
+  comments        comments[]
+  files           files[]
+  posts           posts[]
+  refreshTokens   refresh_tokens[]
+  userRoles       user_roles[]
+}

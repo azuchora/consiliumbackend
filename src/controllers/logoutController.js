@@ -1,5 +1,4 @@
-const { deleteRefreshTokens } = require('../model/refreshTokens');
-const { getUserByRefreshToken } = require('../model/user');
+const { deleteRefreshTokens, getRefreshToken } = require('../model/refreshTokens');
 const { StatusCodes } = require('http-status-codes');
 const { clearRefreshTokenCookie } = require('../services/tokenService');
 
@@ -9,7 +8,8 @@ const handleLogout = async (req, res) => {
         if(!cookies.jwt) return res.sendStatus(StatusCodes.NO_CONTENT);
         
         const refreshToken = cookies.jwt;
-        const foundUser = await getUserByRefreshToken(refreshToken);
+        const foundToken = await getRefreshToken({ token: refreshToken });
+        const foundUser = foundToken?.users;
 
         if(!foundUser){
             clearRefreshTokenCookie(res);

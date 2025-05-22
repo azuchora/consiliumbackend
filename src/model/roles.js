@@ -1,40 +1,69 @@
-const sql = require('../db/client');
-const { getOneByFilters, getManyByFilters } = require('../db/queries');
+const { prisma } = require('../db/client');
 
-const getRole = (filters = {}) => getOneByFilters('user_roles', filters);
-const getRoles = (filters = {}) => getManyByFilters('user_roles', filters);
+const getRole = (filters = {}) => {
+  return prisma.user_roles.findFirst({
+    where: filters,
+    include: {
+      roles: true,
+      users: true,
+    },
+  });
+};
+
+const getRoles = (filters = {}) => {
+  return prisma.user_roles.findMany({
+    where: filters,
+    include: {
+      roles: true,
+      users: true,
+    },
+  });
+};
 
 const assignRole = async ({ userId, roleId }) => {
-    if(!userId || !roleId){
-        throw new Error('Missing required fields.');
-    }
+  if(!userId || !roleId){
+    throw new Error('Missing required fields.');
+  }
 
-    const result = await sql`
-        INSERT INTO user_roles(user_id, role_id)
-        VALUES (${userId}, ${roleId})
-        RETURNING *
-    `;
-   
-    return result[0];
+  const existing = await prisma.user_roles.findFirst({
+    where: {
+      userId,
+      roleId,
+    },
+  });
+
+  if(existing){
+    throw new Error('User already has this role.');
+  }
+
+  return await prisma.user_roles.create({
+    data: {
+      userId,
+      roleId,
+    },
+    include: {
+      roles: true,
+      users: true,
+    },
+  });
 };
 
 const revokeRole = async ({ userId, roleId }) => {
-    if(!userId || !roleId){
-        throw new Error('Missing required fields.');
-    }
+  if(!userId || !roleId){
+    throw new Error('Missing required fields.');
+  }
 
-    const result = await sql`
-        DELETE FROM user_roles
-        WHERE user_id = ${userId} AND role_id = ${roleId}
-        RETURNING *
-    `;
-   
-    return result[0];
+  return await prisma.user_roles.deleteMany({
+    where: {
+      userId,
+      roleId,
+    },
+  });
 };
 
 module.exports = {
-    getRole,
-    getRoles,
-    assignRole,
-    revokeRole,
-}
+  getRole,
+  getRoles,
+  assignRole,
+  revokeRole,
+};
