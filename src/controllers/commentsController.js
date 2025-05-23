@@ -93,8 +93,6 @@ const handleGetParentComments = async (req, res) => {
             limit,
             timestamp: timestamp || null
         });
-
-        console.log(comments);
         
         const newLastFetchedTimestamp = comments.length > 0 
             ? comments[comments.length - 1].createdAt

@@ -14,7 +14,7 @@ const handleRefreshToken = async (req, res) => {
         
         // clearRefreshTokenCookie(res);
         const foundToken = await getRefreshToken({ token: refreshToken });
-        const foundUser = foundToken?.users;
+        const foundUser = foundToken ? await getUser({ id: foundToken?.users.id }) : null;
 
         if(!foundUser){
             jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
@@ -29,14 +29,14 @@ const handleRefreshToken = async (req, res) => {
             if(err) await deleteRefreshTokens({ token: refreshToken });
             if(err || foundUser.username !== decoded.username) return res.sendStatus(StatusCodes.UNAUTHORIZED);
 
-            const foundRoles = await getRoles({ userId: foundUser.id });
+            const foundRoles = foundUser.userRoles;
             const roles = foundRoles?.map(r => r.roleId);
             const accessToken = generateAccessToken({ username: foundUser.username, id: foundUser.id, roles });
             // const newRefreshToken = generateRefreshToken({ username: foundUser.username, id: foundUser.id });
 
             // await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
             // setRefreshTokenCookie(res, newRefreshToken);
-            return res.json({ accessToken, roles, });
+            return res.json({ accessToken, roles, username: foundUser.username, avatarFilename: foundUser?.files[0]?.filename });
         });
     } catch (error) {
         console.error('RefreshToken error:', error);

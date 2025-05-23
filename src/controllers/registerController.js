@@ -33,7 +33,7 @@ const handleNewUser = async (req, res) => {
             ]
         });
         
-        if(existingUser.length > 0){
+        if(existingUser){
             return res.status(StatusCodes.CONFLICT).json({ message: 'User with this username or email already exists.' });
         }
 

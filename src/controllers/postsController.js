@@ -60,11 +60,11 @@ const handleGetPost = async (req, res) => {
         }
 
         const foundPost = await getPost({ id: postId });
-
+        
         if(!foundPost){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
-
+        
         return res.status(StatusCodes.OK).json({ post: {...foundPost } });
     } catch (error) {
         console.error('getPost error:', error);
