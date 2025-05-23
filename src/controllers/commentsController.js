@@ -12,10 +12,11 @@ const { censorFile } = require('../services/censorService');
 const handleNewComment = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { content, parentCommentId } = req.body;
+        const { content } = req.body;
 
         const postId = sanitizeId(req.params.id);
-
+        const parentCommentId = sanitizeId(req.body?.parentCommentId);
+        
         if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }

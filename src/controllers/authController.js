@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const { StatusCodes } = require('http-status-codes');
-const { getUser } = require('../model/user');                   
+const { getUser, updateUser } = require('../model/user');                   
 const { deleteRefreshTokens, createRefreshToken, getRefreshToken } = require('../model/refreshTokens');
 const { generateAccessToken, generateRefreshToken, clearRefreshTokenCookie, setRefreshTokenCookie } = require('../services/tokenService');
 const { assignRole } = require('../model/roles');
@@ -103,6 +103,12 @@ const handleUserVerification = async (req, res) => {
         switch (response.status){
             case StatusCodes.OK:
                 await assignRole({ userId: req.user.id, roleId: ROLES.Verified });
+                await updateUser({ id: req.user.id }, {
+                    name, 
+                    surname, 
+                    pesel, 
+                    pwz
+                })
                 return res.status(StatusCodes.OK).json({ success: true, message: 'User successfully verified.' });
             
             case StatusCodes.BAD_REQUEST:
@@ -113,8 +119,8 @@ const handleUserVerification = async (req, res) => {
         }
         
     } catch (error) {
-    console.error('UserVerification error:', error);
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+        console.error('UserVerification error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
     }
 }
 

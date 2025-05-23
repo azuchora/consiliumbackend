@@ -1,11 +1,21 @@
 const { prisma } = require('../db/client');
 
+const userSelect = {
+  createdAt: true,
+  username: true,
+  name: true,
+  surname: true,
+  files: true,
+};
+
 const getComment = (filters = {}) => {
   return prisma.comments.findFirst({
     where: filters,
     include: {
-      users: true,
       files: true,
+      users: {
+        select: userSelect,
+      },
     },
   });
 };
@@ -14,8 +24,10 @@ const getComments = (filters = {}) => {
   return prisma.comments.findMany({
     where: filters,
     include: {
-      users: true,
       files: true,
+      users: {
+        select: userSelect,
+      },
     },
   });
 };
@@ -34,7 +46,7 @@ const deleteComment = (filters = {}) => {
 };
 
 const createComment = async ({ postId, userId, content, parentCommentId = null }) => {
-  if(!userId || !content || !postId){
+  if (!userId || !content || !postId) {
     throw new Error('Missing required comment fields.');
   }
 
@@ -46,14 +58,16 @@ const createComment = async ({ postId, userId, content, parentCommentId = null }
       commentId: parentCommentId,
     },
     include: {
-      users: true,
       files: true,
+      users: {
+        select: userSelect,
+      },
     },
   });
 };
 
 const getPaginatedParentComments = async ({ postId, limit, timestamp }) => {
-  if(!postId || !limit){
+  if (!postId || !limit) {
     throw new Error('Missing required comment fields');
   }
 
@@ -68,14 +82,16 @@ const getPaginatedParentComments = async ({ postId, limit, timestamp }) => {
     orderBy: { createdAt: 'desc' },
     take: limit,
     include: {
-      users: true,
       files: true,
+      users: {
+        select: userSelect,
+      },
     },
   });
 };
 
 const getPaginatedChildComments = async ({ parentId, limit, timestamp }) => {
-  if(!parentId || !limit){
+  if (!parentId || !limit) {
     throw new Error('Missing required comment fields');
   }
 
@@ -89,8 +105,10 @@ const getPaginatedChildComments = async ({ parentId, limit, timestamp }) => {
     orderBy: { createdAt: 'desc' },
     take: limit,
     include: {
-      users: true,
       files: true,
+      users: {
+        select: userSelect,
+      },
     },
   });
 };

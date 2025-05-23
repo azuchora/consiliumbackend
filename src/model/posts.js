@@ -1,30 +1,32 @@
 const { prisma } = require('../db/client');
 
+const usersSelect = {
+  id: true,
+  username: true,
+  surname: true,
+  name: true,
+}
+
+const filesSelect = {
+  id: true,
+  filename: true,
+  createdAt: true,
+}
+
 const getPost = (filters = {}) => {
   return prisma.posts.findFirst({
     where: filters,
     include: {
       users: {
         select: {
-          id: true,
-          username: true,
-          surname: true,
-          name: true,
+          ...usersSelect,
           files: {
-            select: {
-              id: true,
-              filename: true,
-              createdAt: true,
-            },
+            select: filesSelect,
           },
         },
       },
       files: {
-        select: {
-          id: true,
-          filename: true,
-          createdAt: true,
-        },
+        select: filesSelect,
       },
     },
   });
@@ -36,25 +38,14 @@ const getPosts = (filters = {}) => {
     include: {
       users: {
         select: {
-          id: true,
-          username: true,
-          surname: true,
-          name: true,
+          ...usersSelect,
           files: {
-            select: {
-              id: true,
-              filename: true,
-              createdAt: true,
-            },
+            select: filesSelect,
           },
         },
       },
       files: {
-        select: {
-          id: true,
-          filename: true,
-          createdAt: true,
-        },
+        select: filesSelect,
       },
     },
   });
@@ -87,25 +78,14 @@ const createPost = async ({ userId, title, description }) => {
     include: {
       users: {
         select: {
-          id: true,
-          username: true,
-          surname: true,
-          name: true,
+          ...usersSelect,
           files: {
-            select: {
-              id: true,
-              filename: true,
-              createdAt: true,
-            },
+            select: filesSelect,
           },
         },
       },
       files: {
-        select: {
-          id: true,
-          filename: true,
-          createdAt: true,
-        },
+        select: filesSelect,
       },
     },
   });
@@ -128,25 +108,14 @@ const getPaginatedPosts = async ({ limit, timestamp, filters = {} }) => {
     include: {
       users: {
         select: {
-          id: true,
-          username: true,
-          surname: true,
-          name: true,
+          ...usersSelect,
           files: {
-            select: {
-              id: true,
-              filename: true,
-              createdAt: true,
-            },
+            select: filesSelect,
           },
         },
       },
       files: {
-        select: {
-          id: true,
-          filename: true,
-          createdAt: true,
-        },
+        select: filesSelect
       },
     },
   });

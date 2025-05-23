@@ -2,8 +2,8 @@ const validator = require('validator');
 const LENGTH_LIMITS = require('../config/lengthLimits');
 
 const sanitizeId = (input) => {
-    const sanitized = Number(input);
-    return Number.isInteger(sanitized) && sanitized > 0 ? sanitized : '';
+    const sanitized = parseInt(input);
+    return Number.isInteger(sanitized) && sanitized > 0 ? sanitized : null;
 }
 
 const isValidPassword = (password) => {

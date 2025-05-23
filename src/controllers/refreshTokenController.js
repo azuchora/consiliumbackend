@@ -3,7 +3,6 @@ const { getUser, getUserByRefreshToken } = require('../model/user');
 const { StatusCodes } = require('http-status-codes');
 const { deleteRefreshTokens, createRefreshToken, getRefreshToken } = require('../model/refreshTokens');
 const { generateAccessToken, generateRefreshToken, clearRefreshTokenCookie, setRefreshTokenCookie } = require('../services/tokenService');
-const { getRoles } = require('../model/roles');
 
 const handleRefreshToken = async (req, res) => {
     try {
@@ -36,7 +35,8 @@ const handleRefreshToken = async (req, res) => {
 
             // await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
             // setRefreshTokenCookie(res, newRefreshToken);
-            return res.json({ accessToken, roles, username: foundUser.username, avatarFilename: foundUser?.files[0]?.filename });
+            const avatarFilename = !foundUser?.files[0]?.filename ? null : foundUser?.files[0]?.filename;
+            return res.json({ accessToken, roles, username: foundUser.username, avatarFilename });
         });
     } catch (error) {
         console.error('RefreshToken error:', error);
