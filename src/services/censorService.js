@@ -6,7 +6,7 @@ const { UPLOAD_DIR } = require('./fileService');
 
 const regexPatterns = {
     phone: /\d{3}[\s-]?\d{3}[\s-]?\d{3}/g,
-    pesel: /\d{11}/g,
+    pesel: /\b\d{11}\b/g,
     email: /[^\s@]+@[^\s@]+\.[^\s@]+/g
 };
 
@@ -14,12 +14,9 @@ const censorFile = async (filename) => {
     if (!(/\.(png|jpe?g)$/i.test(filename))) return;
 
     const filePath = path.join(UPLOAD_DIR, filename);
-
     const { data } = await Tesseract.recognize(filePath, 'eng');
 
-    if(!data.words?.length){
-        return;
-    }
+    if (!data.words?.length) return;
 
     const image = await loadImage(filePath);
     const canvas = createCanvas(image.width, image.height);
@@ -33,11 +30,8 @@ const censorFile = async (filename) => {
         lines[line_num].push({ text: text.trim(), bbox, masked: false });
     }
 
-    let maskedCount = 0;
-
     for(const lineWords of Object.values(lines)){
         const lineText = lineWords.map(w => w.text).join(' ');
-
         if (!lineText.match(/[\d@]/)) continue;
 
         let charIndex = 0;
@@ -50,17 +44,15 @@ const censorFile = async (filename) => {
 
         for(const regex of Object.values(regexPatterns)){
             let match;
-            while((match = regex.exec(lineText)) !== null){
+            while ((match = regex.exec(lineText)) !== null){
                 const matchStart = match.index;
                 const matchEnd = matchStart + match[0].length;
 
                 for(let i = 0; i < wordCharRanges.length; i++){
                     if (lineWords[i].masked) continue;
-
                     const { start, end } = wordCharRanges[i];
                     if(!(end <= matchStart || start >= matchEnd)){
                         lineWords[i].masked = true;
-                        maskedCount++;
                     }
                 }
             }
@@ -72,15 +64,20 @@ const censorFile = async (filename) => {
         for(const word of lineWords){
             if(word.masked){
                 const { x0, y0, x1, y1 } = word.bbox;
-                ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+                if (
+                    x0 >= 0 && y0 >= 0 &&
+                    x1 <= image.width && y1 <= image.height &&
+                    x1 > x0 && y1 > y0
+                ){
+                    ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+                }
             }
         }
     }
 
-    const out = fs.createWriteStream(filePath);
-    const stream = canvas.createPNGStream();
-    stream.pipe(out);
-}
+    const buffer = canvas.toBuffer('image/png');
+    fs.writeFileSync(filePath, buffer);
+};
 
 module.exports = {
     censorFile,

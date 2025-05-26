@@ -50,6 +50,8 @@ model posts {
   title        String         @db.VarChar
   userId       Int            @map("user_id")
   postStatusId Int?           @map("post_status_id")
+  age          Int?
+  gender       String?        @db.VarChar
   comments     comments[]
   files        files[]
   postStatuses post_statuses? @relation(fields: [postStatusId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_statuses_fk")

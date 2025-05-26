@@ -43,8 +43,12 @@ const handleNewPost = async (req, res) => {
             await deletePost({ id: newPost.id });
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error while saving attachments.' });
         }
-        
-        return res.status(StatusCodes.CREATED).json({ post: newPost, files: createdFiles });
+        newPost.files = createdFiles.map(f => {
+            return {
+                'filename': f,
+            }
+        });
+        return res.status(StatusCodes.CREATED).json({ post: newPost });
     } catch (error) {
         console.error('CreatePost error:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
@@ -107,12 +111,24 @@ const handleDeletePost = async (req, res) => {
 
 const handleGetPosts = async (req, res) => {
     try {
-        const { limit = 5, postStatusId, timestamp } = req.query;
+        const {
+        limit = 5,
+        timestamp,
+        postStatusId,
+        search,
+        categoryId,
+        age,
+        gender,
+        } = req.query;
 
         const posts = await getPaginatedPosts({
             limit,
-            postStatusId: postStatusId || null,
-            timestamp: timestamp || null
+            timestamp,
+            postStatusId,
+            search,
+            categoryId,
+            age,
+            gender
         });
 
         const newLastFetchedTimestamp = posts.length > 0 
