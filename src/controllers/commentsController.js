@@ -1,6 +1,6 @@
 const { StatusCodes } = require('http-status-codes');
 const { getPost } = require('../model/posts');
-const { getComment, createComment, deleteComment, getPaginatedParentComments, getPaginatedChildComments } = require('../model/comments');
+const { getComment, createComment, deleteComment, getPaginatedParentComments, getPaginatedChildComments, upsertCommentVote, markCommentHelpful, deleteCommentVote } = require('../model/comments');
 const fileService = require('../services/fileService');
 const { createFile } = require('../model/files');
 const { sanitizeId, isValidComment } = require('../services/sanitizationService');
@@ -42,7 +42,7 @@ const handleNewComment = async (req, res) => {
         }
 
         const newComment = await createComment({ postId, userId, content, parentCommentId });
-
+        
         const files = req.files;
         const createdFiles = [];
         if(files)
@@ -176,9 +176,76 @@ const handleDeleteComment = async (req, res) => {
     }
 }
 
+
+const handleVoteComment = async (req, res) => {
+    try {
+        const user = req.user;
+        const commentId = sanitizeId(req.params.id);
+        const { value } = req.body;
+
+        // if(value == 0){
+        //     await deleteCommentVote({
+        //         userId: user.id,
+        //         commentId
+        //     });
+        //     return res.status(StatusCodes.OK);
+        // }
+
+        if(![1, -1].includes(value)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Vote must be 1 or -1.' });
+        }
+
+        if(!commentId){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment id.' });
+        }
+
+        const updatedVote = await upsertCommentVote({
+            userId: user.id,
+            commentId,
+            value
+        });
+
+        return res.status(StatusCodes.OK).json({ vote: updatedVote });
+    } catch (error) {
+        console.error('VoteComment error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
+const handleMarkCommentHelpful = async (req, res) => {
+    try {
+        const user = req.user;
+        const commentId = sanitizeId(req.params.id);
+        const { isHelpful } = req.body;
+
+        if(typeof isHelpful !== 'boolean'){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'isHelpful must be boolean' });
+        }
+
+        if(!commentId){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment id.' });
+        }
+
+        
+        const comment = await getComment({ id: commentId });
+        if(!comment){
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'Comment not found' });
+        }
+
+        const updatedComment = await markCommentHelpful({ commentId, isHelpful });
+
+        return res.status(StatusCodes.OK).json({ comment: updatedComment });
+    } catch (error) {
+        console.error('MarkCommentHelpful error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
     handleNewComment,
     handleGetParentComments,
     handleGetChildComments,
     handleDeleteComment,
+    handleVoteComment,
+    handleMarkCommentHelpful,
 };

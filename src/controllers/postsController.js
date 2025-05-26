@@ -1,20 +1,35 @@
 const { createFile } = require('../model/files');
-const { createPost, deletePost, getPost, getPaginatedPosts } = require('../model/posts');
+const { createPost, deletePost, getPost, getPaginatedPosts, upsertPostVote } = require('../model/posts');
 const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
 const { sanitizeId } = require('../services/sanitizationService');
 const { censorFile } = require('../services/censorService');
+const POST_STATUSES = require('../config/postStatuses');
+
+const allowdGenders = ['male', 'female'];
 
 const handleNewPost = async (req, res) => {
     try {
-        const { title, description } = req.body;
+        const { title, description, gender, age, postStatusId } = req.body;
         const user = req.user;
 
-        if(!title || !description){
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Title and description are required.' })
+        if(!title || !description || !gender || !age || !postStatusId){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Title, description, gender and age are required.' })
         }
         
-        const newPost = await createPost({ userId: user.id, title, description });
+        if(!POST_STATUSES[postStatusId]){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post status.' });
+        }
+
+        if(!allowdGenders.includes(gender)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid gender.' });
+        }
+
+        if(age < 0 || age > 120){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid age.' });   
+        }
+
+        const newPost = await createPost({ userId: user.id, title, description, gender, age, postStatusId });
         
         const files = req.files;
         let createdFiles = [];
@@ -43,8 +58,12 @@ const handleNewPost = async (req, res) => {
             await deletePost({ id: newPost.id });
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error while saving attachments.' });
         }
-        
-        return res.status(StatusCodes.CREATED).json({ post: newPost, files: createdFiles });
+        newPost.files = createdFiles.map(f => {
+            return {
+                'filename': f,
+            }
+        });
+        return res.status(StatusCodes.CREATED).json({ post: newPost });
     } catch (error) {
         console.error('CreatePost error:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
@@ -107,14 +126,28 @@ const handleDeletePost = async (req, res) => {
 
 const handleGetPosts = async (req, res) => {
     try {
-        const { limit = 5, postStatusId, timestamp } = req.query;
+        const {
+            limit = 5,
+            timestamp,
+            postStatusId,
+            search,
+            categoryId,
+            age,
+            gender,
+            username,
+        } = req.query;
 
         const posts = await getPaginatedPosts({
             limit,
-            postStatusId: postStatusId || null,
-            timestamp: timestamp || null
+            timestamp,
+            postStatusId,
+            search,
+            categoryId,
+            age,
+            gender,
+            username,
         });
-
+        
         const newLastFetchedTimestamp = posts.length > 0 
             ? posts[posts.length - 1].createdAt
             : timestamp;
@@ -133,9 +166,38 @@ const handleGetPosts = async (req, res) => {
     }
 };
 
+const handleVotePost = async (req, res) => {
+    try {
+        const user = req.user;
+        const postId = sanitizeId(req.params.id);
+        const { value } = req.body;
+
+        if(![1, -1].includes(value)){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Vote must be 1 or -1.' });
+        }
+
+        if(!postId){
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+        }
+
+        const updatedVote = await upsertPostVote({
+            userId: user.id,
+            postId,
+            value
+        });
+
+        return res.status(StatusCodes.OK).json({ vote: updatedVote });
+    } catch (error) {
+        console.error('VotePost error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
     handleNewPost,
     handleGetPost,
     handleDeletePost,
     handleGetPosts,
+    handleVotePost,
+    handleVotePost,
 }

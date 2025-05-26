@@ -36,7 +36,7 @@ const handleRefreshToken = async (req, res) => {
             // await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
             // setRefreshTokenCookie(res, newRefreshToken);
             const avatarFilename = !foundUser?.files[0]?.filename ? null : foundUser?.files[0]?.filename;
-            return res.json({ accessToken, roles, username: foundUser.username, avatarFilename });
+            return res.json({ accessToken, roles, username: foundUser.username, avatarFilename, id: foundUser.id });
         });
     } catch (error) {
         console.error('RefreshToken error:', error);

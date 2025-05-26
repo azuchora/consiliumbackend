@@ -9,17 +9,19 @@ datasource db {
 }
 
 model comments {
-  id            Int        @id @default(autoincrement())
-  postId        Int        @map("post_id")
-  userId        Int?       @map("user_id")
-  commentId     Int?       @map("comment_id")
-  createdAt     DateTime?  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime?  @default(now()) @map("updated_at") @db.Timestamptz(6)
-  content       String?    @db.VarChar
-  comments      comments?  @relation("commentsTocomments", fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_fkey")
-  otherComments comments[] @relation("commentsTocomments")
-  posts         posts      @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_fkey")
-  users         users?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fkey")
+  id            Int             @id @default(autoincrement())
+  postId        Int             @map("post_id")
+  userId        Int?            @map("user_id")
+  commentId     Int?            @map("comment_id")
+  createdAt     DateTime?       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime?       @default(now()) @map("updated_at") @db.Timestamptz(6)
+  content       String?         @db.VarChar
+  isHelpful    Boolean         @default(false)
+  comment_votes comment_votes[]
+  comments      comments?       @relation("commentsTocomments", fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_fkey")
+  otherComments comments[]      @relation("commentsTocomments")
+  posts         posts           @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_fkey")
+  users         users?          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fkey")
   files         files[]
 }
 
@@ -50,8 +52,11 @@ model posts {
   title        String         @db.VarChar
   userId       Int            @map("user_id")
   postStatusId Int?           @map("post_status_id")
+  age          Int?
+  gender       String?        @db.VarChar
   comments     comments[]
   files        files[]
+  post_votes   post_votes[]
   postStatuses post_statuses? @relation(fields: [postStatusId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_statuses_fk")
   users        users          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "users_fk")
 }
@@ -88,9 +93,33 @@ model users {
   surname        String?          @db.VarChar
   pwz            String?          @db.VarChar
   pesel          String?          @db.VarChar
+  comment_votes  comment_votes[]
   comments       comments[]
   files          files[]
+  post_votes     post_votes[]
   posts          posts[]
   refreshTokens  refresh_tokens[]
   userRoles      user_roles[]
+}
+
+model post_votes {
+  id     Int   @id @default(autoincrement())
+  postId Int   @map("post_id")
+  userId Int   @map("user_id")
+  value  Int
+  posts  posts @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "posts_fk")
+  users  users @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_fk")
+
+  @@unique([userId, postId])
+}
+
+model comment_votes {
+  id         Int  @id @default(autoincrement())
+  userId     Int  @map("user_id")
+  commentId  Int  @map("comment_id")
+  value      Int
+  comments   comments @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comment_fk")
+  users      users    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_fk")
+
+  @@unique([userId, commentId], map: "comments_votes_user_id_post_id_key")
 }

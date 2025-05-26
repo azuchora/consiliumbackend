@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { handleNewComment, handleGetParentComments, handleGetChildComments, handleDeleteComment } = require('../controllers/commentsController');
+const { handleNewComment, handleGetParentComments, handleGetChildComments, handleDeleteComment, handleVoteComment, handleMarkCommentHelpful } = require('../controllers/commentsController');
 const verifyJWT = require('../middleware/verifyJWT');
 const fileUpload = require('express-fileupload');
 const fileExtLimiter = require('../middleware/fileExtLimiter');
@@ -16,6 +16,9 @@ router.post('/posts/:id/comments',
 );
 
 router.delete('/comments/:id', handleDeleteComment);
+
+router.put('/comments/:id/vote', handleVoteComment);
+router.put('/comments/:id/helpful', handleMarkCommentHelpful);
 
 router.get('/posts/:id/comments', handleGetParentComments);
 router.get('/comments/:id/replies', handleGetChildComments);

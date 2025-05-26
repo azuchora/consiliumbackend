@@ -9,7 +9,7 @@ const filePayloadExists = require('../middleware/filesPayloadExists');
 
 router.use(verifyJWT);
 
-router.post('/users/:id/avatar',
+router.put('/users/:id/avatar',
     fileUpload({ createParentPath: true }), 
     filePayloadExists, 
     fileExtLimiter(['.png', '.jpg', '.jpeg']), 
@@ -19,6 +19,6 @@ router.post('/users/:id/avatar',
 
 router.get('/users/:id/avatar', handleGetAvatar);
 
-router.get('/users/:id', handleGetUser);
+router.get('/users/:username', handleGetUser);
 
 module.exports = router;

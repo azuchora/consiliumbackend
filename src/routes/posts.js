@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { handleNewPost, handleGetPost, handleDeletePost, handleGetPosts } = require('../controllers/postsController');
+const { handleNewPost, handleGetPost, handleDeletePost, handleGetPosts, handleVotePost } = require('../controllers/postsController');
 const verifyJWT = require('../middleware/verifyJWT');
 const fileUpload = require('express-fileupload');
 const fileExtLimiter = require('../middleware/fileExtLimiter');
@@ -21,6 +21,8 @@ router.post('/posts',
 
 router.get('/posts', handleGetPosts);
 router.get('/posts/:id', handleGetPost);
+
+router.put('/posts/:id/vote', handleVotePost);
 
 router.delete('/posts/:id', handleDeletePost);
 

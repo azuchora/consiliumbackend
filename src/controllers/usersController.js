@@ -2,6 +2,7 @@ const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
 const { createFile, getFile, updateFile } = require('../model/files');
 const { getUser } = require('../model/user');
+const { sanitizeId } = require('../services/sanitizationService');
 
 const handleUploadAvatar = async (req, res) => {
     try {
@@ -76,20 +77,32 @@ const handleGetAvatar = async (req, res) => {
 
 const handleGetUser = async (req, res) => {
     try {
-        const userId = sanitizeId(req.params.id);
+        const username = req.params.username;
         
-        if(!userId){
+        if(!username){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user ID.' });
         }
 
-        const { id, username, createdAt } = await getUser({ id: userId });
-        const user = {
-            id,
-            username,
-            createdAt
-        }
+        const { 
+            id, 
+            createdAt,
+            name,
+            surname,
+            files,
+            userRoles,
+        } = await getUser({ username });
         
-        return res.status(StatusCodes.OK).json({ user })
+        return res.status(StatusCodes.OK).json({
+            user: {
+                id,
+                username,
+                createdAt,
+                name,
+                surname,
+                files: files.map(file => ({ id: file.id, filename: file.filename })),
+                roles: userRoles.map(ur => ur.roleId),
+            }
+         })
     } catch (error){
         console.error('getUser error:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
