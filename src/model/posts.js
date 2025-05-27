@@ -5,9 +5,16 @@ const usersSelect = {
     username: true,
     surname: true,
     name: true,
+    id: true,
+    username: true,
+    surname: true,
+    name: true,
 }
 
 const filesSelect = {
+    id: true,
+    filename: true,
+    createdAt: true,
     id: true,
     filename: true,
     createdAt: true,
@@ -68,9 +75,16 @@ const updatePost = (filters = {}, updatedData = {}) => {
         where: filters,
         data: updatedData,
     });
+    return prisma.posts.updateMany({
+        where: filters,
+        data: updatedData,
+    });
 };
 
 const deletePost = (filters = {}) => {
+    return prisma.posts.deleteMany({
+        where: filters,
+    });
     return prisma.posts.deleteMany({
         where: filters,
     });
@@ -91,6 +105,18 @@ const createPost = async ({ userId, title, description, age, gender, postStatusI
         postStatusId : postStatusId ? Number(postStatusId) : 1,
     },
     include: {
+        users: {
+            select: {
+            ...usersSelect,
+            files: {
+                select: filesSelect,
+            },
+            },
+        },
+        files: {
+            select: filesSelect,
+        },
+        },
         users: {
             select: {
             ...usersSelect,

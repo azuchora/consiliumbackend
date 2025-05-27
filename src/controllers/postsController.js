@@ -64,6 +64,12 @@ const handleNewPost = async (req, res) => {
             }
         });
         return res.status(StatusCodes.CREATED).json({ post: newPost });
+        newPost.files = createdFiles.map(f => {
+            return {
+                'filename': f,
+            }
+        });
+        return res.status(StatusCodes.CREATED).json({ post: newPost });
     } catch (error) {
         console.error('CreatePost error:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
