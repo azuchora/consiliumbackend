@@ -8,6 +8,7 @@ const { emitNewComment } = require('../socket/comments');
 const { sockets } = require('../socket');
 const ROLES = require('../config/roles');
 const { censorFile } = require('../services/censorService');
+const { notifyUser } = require('../services/notificationService');
 
 const handleNewComment = async (req, res) => {
     try {
@@ -16,6 +17,8 @@ const handleNewComment = async (req, res) => {
 
         const postId = sanitizeId(req.params.id);
         const parentCommentId = sanitizeId(req.body?.parentCommentId);
+
+        let notificationPromises = [];
         
         if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
@@ -34,11 +37,24 @@ const handleNewComment = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
+        notificationPromises.push(notifyUser({
+            userId: foundPost.userId,
+            actorId: userId,
+            postId,
+            type: 'new_comment',
+        }));
+
         if(parentCommentId){
             const parentComment = await getComment({ id: parentCommentId });
             if(!parentComment){
                 return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Parent comment not found.' });
             }
+            notificationPromises.push(notifyUser({
+                userId: parentComment.userId,
+                actorId: userId,
+                type: 'comment_reply',
+                commentId: parentCommentId,
+            }));
         }
 
         const newComment = await createComment({ postId, userId, content, parentCommentId });
@@ -73,7 +89,9 @@ const handleNewComment = async (req, res) => {
 
         emitNewComment(sockets.comments, postId, newComment);
         // console.log(newComment)
-        return res.status(StatusCodes.OK).json({ comment: newComment });
+        res.status(StatusCodes.OK).json({ comment: newComment });
+
+        await Promise.all(notificationPromises);
     } catch (error){
         console.error('newComment error: ', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });

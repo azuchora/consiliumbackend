@@ -17,7 +17,7 @@ const handleNewPost = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Title, description, gender and age are required.' })
         }
         
-        if(!POST_STATUSES[postStatusId]){
+        if(!Object.values(POST_STATUSES).includes(Number(postStatusId))){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post status.' });
         }
 
@@ -63,12 +63,7 @@ const handleNewPost = async (req, res) => {
                 'filename': f,
             }
         });
-        return res.status(StatusCodes.CREATED).json({ post: newPost });
-        newPost.files = createdFiles.map(f => {
-            return {
-                'filename': f,
-            }
-        });
+
         return res.status(StatusCodes.CREATED).json({ post: newPost });
     } catch (error) {
         console.error('CreatePost error:', error);
@@ -142,7 +137,7 @@ const handleGetPosts = async (req, res) => {
             gender,
             username,
         } = req.query;
-
+        
         const posts = await getPaginatedPosts({
             limit,
             timestamp,

@@ -12,6 +12,7 @@ const refreshTokenRouter = require('./src/routes/refreshToken');
 const postsRouter = require('./src/routes/posts');
 const usersRouter = require('./src/routes/users');
 const commentsRouter = require('./src/routes/comments');
+const notificationsRouter = require('./src/routes/notifications');
 const path = require('path');
 const { setupSockets } = require('./src/socket');
 const http = require('http');
@@ -38,7 +39,7 @@ app.use(`${API_ROUTE}`, authRouter);
 app.use(`${API_ROUTE}`, postsRouter);
 app.use(`${API_ROUTE}`, usersRouter);
 app.use(`${API_ROUTE}`, commentsRouter);
-
+app.use(`${API_ROUTE}`, notificationsRouter);
 
 setupSockets(server);
 
