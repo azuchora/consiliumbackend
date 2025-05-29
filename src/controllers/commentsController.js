@@ -9,6 +9,7 @@ const { sockets } = require('../socket');
 const ROLES = require('../config/roles');
 const { censorFile } = require('../services/censorService');
 const { notifyUser } = require('../services/notificationService');
+const { getPostFollowers } = require('../model/follows');
 
 const handleNewComment = async (req, res) => {
     try {
@@ -18,50 +19,45 @@ const handleNewComment = async (req, res) => {
         const postId = sanitizeId(req.params.id);
         const parentCommentId = sanitizeId(req.body?.parentCommentId);
 
-        let notificationPromises = [];
-        
         if(!postId){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
-    
+
         if(!content){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Content is required.' });
         }
-    
+
         if(!isValidComment(content)){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment length.' });
         }
 
-        const foundPost = await getPost({id: postId });
+        const foundPost = await getPost({ id: postId });
         if(!foundPost){
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'Invalid post id.' });
         }
 
-        notificationPromises.push(notifyUser({
-            userId: foundPost.userId,
-            actorId: userId,
-            postId,
-            type: 'new_comment',
-        }));
+        const notificationRecipients = new Map();
 
+        if(foundPost.userId !== userId){
+            notificationRecipients.set(foundPost.userId, { type: 'new_comment', postId, isFollower: false });
+        }
+
+        let parentComment = null;
         if(parentCommentId){
-            const parentComment = await getComment({ id: parentCommentId });
+            parentComment = await getComment({ id: parentCommentId });
             if(!parentComment){
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Parent comment not found.' });
+                return res.status(StatusCodes.NOT_FOUND).json({ message: 'Parent comment not found.' });
             }
-            notificationPromises.push(notifyUser({
-                userId: parentComment.userId,
-                actorId: userId,
-                type: 'comment_reply',
-                commentId: parentCommentId,
-            }));
+            if(parentComment.userId !== userId){
+                notificationRecipients.set(parentComment.userId, { type: 'comment_reply', commentId: parentCommentId });
+            }
         }
 
         const newComment = await createComment({ postId, userId, content, parentCommentId });
-        
+
         const files = req.files;
         const createdFiles = [];
-        if(files)
+        if (files)
         try {
             const filePromises = [];
             for(const key of Object.keys(files)){
@@ -71,7 +67,7 @@ const handleNewComment = async (req, res) => {
                 const promises = fileArray.map(async (file) => {
                     const filename = await fileService.saveFile(file);
                     createdFiles.push({ filename });
-                    await createFile({ filename, commentId: newComment.id});
+                    await createFile({ filename, commentId: newComment.id });
                     await censorFile(filename);
                 });
 
@@ -79,7 +75,7 @@ const handleNewComment = async (req, res) => {
             }
             await Promise.all(filePromises);
             newComment.files = createdFiles;
-        } catch (error){
+        }catch (error){
             for(const file of createdFiles){
                 await fileService.removeFile(file.filename);
             }
@@ -87,12 +83,36 @@ const handleNewComment = async (req, res) => {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Error while saving attachments.' });
         }
 
-        emitNewComment(sockets.comments, postId, newComment);
-        // console.log(newComment)
         res.status(StatusCodes.OK).json({ comment: newComment });
+        emitNewComment(sockets.comments, postId, newComment);
 
+        const followers = await getPostFollowers({ postId });
+        followers.forEach(follower => {
+            if (
+                follower.followerId !== userId &&
+                follower.followerId !== foundPost.userId &&
+                (!parentComment || follower.followerId !== parentComment.userId)
+            ) {
+                notificationRecipients.set(follower.followerId, { type: 'new_comment', postId, isFollower: true });
+            }
+        });
+
+        const notificationPromises = [];
+        for(const [recipientId, meta] of notificationRecipients.entries()){
+            notificationPromises.push(
+                notifyUser({
+                    userId: recipientId,
+                    actorId: userId,
+                    postId,
+                    commentId: parentCommentId,
+                    isFollower: meta.isFollower,
+                    type: meta.type,
+                })
+            );
+        }
+        
         await Promise.all(notificationPromises);
-    } catch (error){
+    } catch (error) {
         console.error('newComment error: ', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
     }
@@ -172,22 +192,22 @@ const handleDeleteComment = async (req, res) => {
         if(!id){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid comment id.' });
         }
-
-        const foundComment = await getComment({ userId: req.user.id });
-
+        
+        const foundComment = await getComment({ id });
+        
         if(!foundComment){
-            return res.status(StatusCodes.NOT_FOUND);
+            return res.sendStatus(StatusCodes.NOT_FOUND);
         }
 
         const isAllowed = user.roles.includes(ROLES.Admin) || foundComment.userId == user.id;
 
         if(!isAllowed){
-            return res.status(StatusCodes.FORBIDDEN);
+            return res.sendStatus(StatusCodes.FORBIDDEN);
         }
 
         await deleteComment({ id: foundComment.id });
 
-        return res.status(StatusCodes.NO_CONTENT);
+        return res.sendStatus(StatusCodes.NO_CONTENT);
     } catch(error){
         console.error('getChildComments: ', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });

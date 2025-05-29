@@ -4,7 +4,7 @@ const { sockets } = require('../socket');
 const { getPost } = require('../model/posts');
 const { getUser } = require('../model/user');
 
-const notifyUser = async ({ userId, actorId, postId, commentId, type }) => {
+const notifyUser = async ({ userId, actorId, postId, commentId, type, isFollower = false }) => {
     const actor = await getUser({ id: actorId });
 
     const avatarFilename = actor?.files?.[0]?.filename ?? '';
@@ -13,6 +13,7 @@ const notifyUser = async ({ userId, actorId, postId, commentId, type }) => {
         authorId: actor.id,
         username: actor.username,
         avatarFilename,
+        isFollower,
     };
 
     if(type === 'new_comment'){
@@ -23,13 +24,13 @@ const notifyUser = async ({ userId, actorId, postId, commentId, type }) => {
         const post = await getPost({ id: postId });
         Object.assign(metadata, { postId, isAnswered: post?.isAnswered ?? false });
     }
-
+    
     const notification = await createNotification({
         userId,
         type,
         metadata,
     });
-
+    
     emitNotification(sockets.notifications, userId, {
         id: notification.id,
         type,

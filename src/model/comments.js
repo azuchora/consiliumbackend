@@ -6,6 +6,7 @@ const userSelect = {
     name: true,
     surname: true,
     files: true,
+    id: true,
 };
 
 const getComment = (filters = {}) => {

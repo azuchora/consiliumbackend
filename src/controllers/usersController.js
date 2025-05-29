@@ -3,6 +3,7 @@ const fileService = require('../services/fileService');
 const { createFile, getFile, updateFile } = require('../model/files');
 const { getUser } = require('../model/user');
 const { sanitizeId } = require('../services/sanitizationService');
+const { followUser, unfollowUser, isUserFollowed, getUserFollowersCount } = require('../model/follows');
 
 const handleUploadAvatar = async (req, res) => {
     try {
@@ -92,6 +93,9 @@ const handleGetUser = async (req, res) => {
             userRoles,
         } = await getUser({ username });
         
+        const followersCount = await getUserFollowersCount(id); 
+        const isFollowed = await isUserFollowed({ followerId: req.user.id, userId: id });
+
         return res.status(StatusCodes.OK).json({
             user: {
                 id,
@@ -99,6 +103,8 @@ const handleGetUser = async (req, res) => {
                 createdAt,
                 name,
                 surname,
+                followersCount,
+                isFollowed,
                 files: files.map(file => ({ id: file.id, filename: file.filename })),
                 roles: userRoles.map(ur => ur.roleId),
             }
@@ -109,8 +115,44 @@ const handleGetUser = async (req, res) => {
     }
 };
 
+const handleFollowUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const followUserId = sanitizeId(req.params.id);
+
+        if(userId === followUserId){
+            return res.status(400).json({ message: 'You cannot follow yourself.' });
+        }
+
+        await followUser({ followerId: userId, userId: followUserId });
+        return res.status(200).json({ message: 'Followed successfully.' });
+    } catch (error) {
+        console.error('Error following user:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+
+const handleUnfollowUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const unfollowUserId = sanitizeId(req.params.id);
+
+        if(userId === unfollowUserId){
+            return res.status(400).json({ message: 'You cannot unfollow yourself.' });
+        }
+
+        await unfollowUser({ followerId: userId, userId: unfollowUserId });
+        return res.status(200).json({ message: 'Unfollowed successfully.' });
+    } catch (error) {
+        console.error('Error unfollowing user:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+
 module.exports = {
     handleUploadAvatar,
     handleGetAvatar,
     handleGetUser,
+    handleFollowUser,
+    handleUnfollowUser,
 }

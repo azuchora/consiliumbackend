@@ -5,6 +5,8 @@ const fileService = require('../services/fileService');
 const { sanitizeId } = require('../services/sanitizationService');
 const { censorFile } = require('../services/censorService');
 const POST_STATUSES = require('../config/postStatuses');
+const { followPost, unfollowPost, isPostFollowed, getUserFollowers } = require('../model/follows');
+const { notifyUser } = require('../services/notificationService');
 
 const allowdGenders = ['male', 'female'];
 
@@ -64,7 +66,20 @@ const handleNewPost = async (req, res) => {
             }
         });
 
-        return res.status(StatusCodes.CREATED).json({ post: newPost });
+        res.status(StatusCodes.CREATED).json({ post: newPost });
+        
+        const followers = await getUserFollowers({ userId: user.id });
+        const followersPromises = followers.map(follower => {
+            return notifyUser({
+                userId: follower.followerId,
+                actorId: user.id,
+                postId: newPost.id,
+                type: 'new_post',
+            })
+        });
+
+        await Promise.all(followersPromises);
+        
     } catch (error) {
         console.error('CreatePost error:', error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
@@ -85,6 +100,11 @@ const handleGetPost = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
         
+        foundPost.isFollowed = await isPostFollowed({
+            followerId: req.user.id,
+            postId: foundPost.id
+        });
+
         return res.status(StatusCodes.OK).json({ post: {...foundPost } });
     } catch (error) {
         console.error('getPost error:', error);
@@ -107,7 +127,7 @@ const handleDeletePost = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
 
-        if(foundPost.user_id != user.id){
+        if(foundPost.userId != user.id){
             return res.status(StatusCodes.FORBIDDEN).json({ message: 'No permission to delete post.' });
         }
 
@@ -148,6 +168,19 @@ const handleGetPosts = async (req, res) => {
             gender,
             username,
         });
+
+        const postPromises = [];
+        const addIsFollowed = async (post) => {
+            post.isFollowed = await isPostFollowed({
+                followerId: req.user.id,
+                postId: post.id
+            });
+        }
+        posts.forEach(post => {
+            postPromises.push(addIsFollowed(post));
+        })
+
+        await Promise.all(postPromises);
         
         const newLastFetchedTimestamp = posts.length > 0 
             ? posts[posts.length - 1].createdAt
@@ -194,6 +227,40 @@ const handleVotePost = async (req, res) => {
     }
 };
 
+const handleFollowPost = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const postId = sanitizeId(req.params.id);
+        
+        if(!postId){
+            return res.status(400).json({ message: 'Invalid post id.' });
+        }
+
+        await followPost({ followerId: userId, postId });
+        return res.status(200).json({ message: 'Post followed successfully.' });
+    } catch (error) {
+        console.error('Error following post:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+
+const handleUnfollowPost = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const postId = sanitizeId(req.params.id);
+
+        if(!postId){
+            return res.status(400).json({ message: 'Invalid post id.' });
+        }
+
+        await unfollowPost({ followerId: userId, postId });
+        return res.status(200).json({ message: 'Post unfollowed successfully.' });
+    } catch (error) {
+        console.error('Error unfollowing post:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+
 module.exports = {
     handleNewPost,
     handleGetPost,
@@ -201,4 +268,6 @@ module.exports = {
     handleGetPosts,
     handleVotePost,
     handleVotePost,
+    handleFollowPost,
+    handleUnfollowPost,
 }
