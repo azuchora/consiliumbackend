@@ -96,7 +96,11 @@ model users {
   pesel                                        String?          @db.VarChar
   comment_votes                                comment_votes[]
   comments                                     comments[]
+  conversations_conversations_user1_idTousers  conversations[]  @relation("conversations_user1_idTousers")
+  conversations_conversations_user2_idTousers  conversations[]  @relation("conversations_user2_idTousers")
   files                                        files[]
+  messages_messages_recipient_idTousers        messages[]       @relation("messages_recipient_idTousers")
+  messages_messages_sender_idTousers           messages[]       @relation("messages_sender_idTousers")
   notifications                                notifications[]
   post_follows                                 post_follows[]
   post_votes                                   post_votes[]
@@ -140,23 +144,49 @@ model notifications {
 }
 
 model post_follows {
-  id          Int       @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   postId     Int       @map("post_id")
-  followerId Int  @map("follower_id")
-  createdAt  DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
-  posts       posts     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_fk")
-  users       users     @relation(fields: [followerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "uer_fk")
+  followerId Int       @map("follower_id")
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  posts      posts     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_fk")
+  users      users     @relation(fields: [followerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "uer_fk")
 
   @@unique([postId, followerId], map: "unique_post_follow")
 }
 
 model user_follows {
   id                                    Int       @id @default(autoincrement())
-  createdAt                            DateTime? @default(now()) @db.Timetz(6) @map("created_at")
-  userId                               Int @map("user_id")
-  followerId                           Int @map("follower_id")
+  createdAt                             DateTime? @default(now()) @map("created_at") @db.Timetz(6)
+  userId                                Int       @map("user_id")
+  followerId                            Int       @map("follower_id")
   users_user_follows_follower_idTousers users     @relation("user_follows_follower_idTousers", fields: [followerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "follower_fk")
   users_user_follows_user_idTousers     users     @relation("user_follows_user_idTousers", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_fk")
 
   @@unique([userId, followerId], map: "unique_user_follow")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model conversations {
+  id                                  Int        @id @default(autoincrement())
+  user1Id                            Int @map("user1_id")
+  user2Id                           Int @map("user2_id")
+  lastMessageAt                     DateTime?  @db.Timestamptz(6) @map("last_message_at")
+  user1 users      @relation("conversations_user1_idTousers", fields: [user1Id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user1_fk")
+  user2 users      @relation("conversations_user2_idTousers", fields: [user2Id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user2_fk")
+  messages                            messages[]
+}
+
+model messages {
+  id                                 Int           @id @default(autoincrement())
+  conversationId                    Int @map("conversation_id")
+  senderId                          Int @map("sender_id")
+  recipientId                       Int @map("recipient_id")
+  content                            String        @db.VarChar
+  createdAt                         DateTime?     @default(now()) @db.Timestamptz(6) @map("created_at")
+  read                               Boolean?      @default(false)
+  deleted                            Boolean?      @default(false)
+  conversations                      conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "conversation_fk")
+  users_messages_recipient_idTousers users         @relation("messages_recipient_idTousers", fields: [recipientId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recipient_fk")
+  users_messages_sender_idTousers    users         @relation("messages_sender_idTousers", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sender_fk")
 }

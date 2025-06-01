@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const { registerCommentSocket } = require('./comments');
 const { registerNotificationSocket } = require("./notifications");
+const { registerChatSocket } = require("./chat");
 
 let sockets = {};
 
@@ -18,6 +19,7 @@ const setupSockets = (server) => {
 
     sockets.comments = registerCommentSocket(io);
     sockets.notifications = registerNotificationSocket(io);
+    sockets.chat = registerChatSocket(io);
 
     return io;
 }

@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const errorHandler = require('./src/middleware/errorHandler');
 const credentials = require('./src/middleware/credentials');
 const { logger } = require('./src/middleware/logger');
+
 const corsOptions = require('./src/config/corsOptions');
 const registerRouter = require('./src/routes/register');
 const authRouter = require('./src/routes/auth');
@@ -13,6 +14,8 @@ const postsRouter = require('./src/routes/posts');
 const usersRouter = require('./src/routes/users');
 const commentsRouter = require('./src/routes/comments');
 const notificationsRouter = require('./src/routes/notifications');
+const chatRouter = require('./src/routes/chat');
+
 const path = require('path');
 const { setupSockets } = require('./src/socket');
 const http = require('http');
@@ -40,6 +43,7 @@ app.use(`${API_ROUTE}`, postsRouter);
 app.use(`${API_ROUTE}`, usersRouter);
 app.use(`${API_ROUTE}`, commentsRouter);
 app.use(`${API_ROUTE}`, notificationsRouter);
+app.use(`${API_ROUTE}`, chatRouter);
 
 setupSockets(server);
 

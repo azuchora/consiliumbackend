@@ -16,7 +16,7 @@ const handleGetNotifications = async (req, res) => {
             notifications.length > 0
                 ? notifications[notifications.length - 1].createdAt
                 : before;
-
+        
         return res.status(200).json({
             notifications,
             pagination: {
