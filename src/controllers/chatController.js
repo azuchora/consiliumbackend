@@ -5,7 +5,8 @@ const {
     getMessages,
     deleteMessage,
     markMessageRead,
-    getConversation
+    getConversation,
+    getMessage
 } = require('../model/chat');
 const { StatusCodes } = require('http-status-codes');
 const { sockets } = require('../socket');
@@ -76,8 +77,15 @@ const handleGetMessages = async (req, res) => {
 const handleDeleteMessage = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
+    const msg = await getMessage({ id: Number(id) });
+    
+    if(!msg || msg.senderId !== userId) {
+        return res.status(StatusCodes.FORBIDDEN).json({ success: false });
+    }
+
     const deleted = await deleteMessage({ id, userId });
     if (deleted) {
+        emitChatDelete(sockets.chat, msg.recipientId, { id: Number(id) });
         emitChatDelete(sockets.chat, userId, { id: Number(id) });
         res.json({ success: true });
     } else {

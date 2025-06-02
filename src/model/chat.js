@@ -102,6 +102,16 @@ const markMessageRead = async ({ id, userId }) => {
     });
 };
 
+const getMessage = async ({ id }) => {
+    return prisma.messages.findUnique({
+        where: { id: Number(id) },
+        include: {
+            sender: { select: userSelect },
+            recipient: { select: userSelect }
+        }
+    });
+};
+
 module.exports = {
     getOrCreateConversation,
     getUserConversations,
@@ -110,4 +120,5 @@ module.exports = {
     deleteMessage,
     markMessageRead,
     getConversation,
+    getMessage,
 }

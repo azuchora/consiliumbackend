@@ -48,9 +48,16 @@ const createUser = async ({ username, hashedPassword, email }) => {
   });
 };
 
+const clearRefreshTokens = async (userId) => {
+    return await prisma.refresh_tokens.deleteMany({
+        where: { userId },
+    });
+};
+
 module.exports = {
   getUser,
   getUsers,
   updateUser,
   createUser,
+  clearRefreshTokens,
 };

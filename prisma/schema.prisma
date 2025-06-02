@@ -106,6 +106,7 @@ model users {
   post_votes                                   post_votes[]
   posts                                        posts[]
   refreshTokens                                refresh_tokens[]
+  reset_tokens                                 reset_tokens[]
   user_follows_user_follows_follower_idTousers user_follows[]   @relation("user_follows_follower_idTousers")
   user_follows_user_follows_user_idTousers     user_follows[]   @relation("user_follows_user_idTousers")
   userRoles                                    user_roles[]
@@ -168,25 +169,33 @@ model user_follows {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model conversations {
-  id                                  Int        @id @default(autoincrement())
-  user1Id                            Int @map("user1_id")
-  user2Id                           Int @map("user2_id")
-  lastMessageAt                     DateTime?  @db.Timestamptz(6) @map("last_message_at")
-  user1 users      @relation("conversations_user1_idTousers", fields: [user1Id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user1_fk")
-  user2 users      @relation("conversations_user2_idTousers", fields: [user2Id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user2_fk")
-  messages                            messages[]
+  id            Int        @id @default(autoincrement())
+  user1Id       Int        @map("user1_id")
+  user2Id       Int        @map("user2_id")
+  lastMessageAt DateTime?  @map("last_message_at") @db.Timestamptz(6)
+  user1         users      @relation("conversations_user1_idTousers", fields: [user1Id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user1_fk")
+  user2         users      @relation("conversations_user2_idTousers", fields: [user2Id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user2_fk")
+  messages      messages[]
 }
 
 model messages {
   id                                 Int           @id @default(autoincrement())
-  conversationId                    Int @map("conversation_id")
-  senderId                          Int @map("sender_id")
-  recipientId                       Int @map("recipient_id")
+  conversationId                     Int           @map("conversation_id")
+  senderId                           Int           @map("sender_id")
+  recipientId                        Int           @map("recipient_id")
   content                            String        @db.VarChar
-  createdAt                         DateTime?     @default(now()) @db.Timestamptz(6) @map("created_at")
+  createdAt                          DateTime?     @default(now()) @map("created_at") @db.Timestamptz(6)
   read                               Boolean?      @default(false)
   deleted                            Boolean?      @default(false)
   conversations                      conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "conversation_fk")
-  users_messages_recipient_idTousers users         @relation("messages_recipient_idTousers", fields: [recipientId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recipient_fk")
-  users_messages_sender_idTousers    users         @relation("messages_sender_idTousers", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sender_fk")
+  recipient users         @relation("messages_recipient_idTousers", fields: [recipientId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recipient_fk")
+  sender    users         @relation("messages_sender_idTousers", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sender_fk")
+}
+
+model reset_tokens {
+  id         Int       @id @default(autoincrement())
+  userId    Int @map("user_id")
+  token      String    @unique(map: "token_unique") @db.VarChar
+  expiresAt DateTime? @db.Timestamptz(6) @map("expires_at")
+  users      users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_fk")
 }

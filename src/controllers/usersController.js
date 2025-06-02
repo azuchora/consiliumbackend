@@ -1,9 +1,13 @@
 const { StatusCodes } = require('http-status-codes');
 const fileService = require('../services/fileService');
 const { createFile, getFile, updateFile } = require('../model/files');
-const { getUser } = require('../model/user');
+const { getUser, updateUser, clearRefreshTokens } = require('../model/user');
 const { sanitizeId } = require('../services/sanitizationService');
+const bcrypt = require('bcrypt');
 const { followUser, unfollowUser, isUserFollowed, getUserFollowersCount } = require('../model/follows');
+const { createPasswordResetToken, getPasswordResetToken, deletePasswordResetToken } = require('../model/resetTokens');
+const { sendResetEmail } = require('../services/emailService');
+const crypto = require('crypto');
 
 const handleUploadAvatar = async (req, res) => {
     try {
@@ -149,10 +153,89 @@ const handleUnfollowUser = async (req, res) => {
     }
 }
 
+const handleChangePassword = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Old and new password are required.' });
+        }
+
+        const user = await getUser({ id: userId });
+        if (!user) {
+            return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' });
+        }
+
+        const match = await bcrypt.compare(oldPassword, user.hashedPassword);
+        if (!match) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Old password is incorrect.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await updateUser({ id: userId }, { hashedPassword });
+
+        res.status(StatusCodes.OK).json({ message: 'Password changed successfully.' });
+        await clearRefreshTokens(userId);
+    } catch (error) {
+        console.error('ChangePassword error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
+const handleForgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Email is required.' });
+
+        const user = await getUser({ email });
+        if (!user) return res.status(StatusCodes.OK).json({ message: 'If the email exists, a reset link was sent.' });
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1h
+
+        await createPasswordResetToken({ userId: user.id, token, expiresAt });
+
+        await sendResetEmail(user.email, token);
+
+        return res.status(StatusCodes.OK).json({ message: 'If the email exists, a reset link was sent.' });
+    } catch (error) {
+        console.error('ForgotPassword error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
+const handleResetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Token and new password are required.' });
+        }
+
+        const resetToken = await getPasswordResetToken({ token });
+        if (!resetToken || resetToken.expiresAt < new Date()) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid or expired token.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await updateUser({ id: resetToken.userId }, { hashedPassword });
+        await deletePasswordResetToken({ token });
+
+        res.status(StatusCodes.OK).json({ message: 'Password reset successfully.' });
+        await clearRefreshTokens(userId);
+    } catch (error) {
+        console.error('ResetPassword error:', error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
     handleUploadAvatar,
     handleGetAvatar,
     handleGetUser,
     handleFollowUser,
     handleUnfollowUser,
+    handleChangePassword,
+    handleForgotPassword,
+    handleResetPassword,
 }
