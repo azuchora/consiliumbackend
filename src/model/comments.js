@@ -13,16 +13,21 @@ const getComment = (filters = {}) => {
     return prisma.comments.findFirst({
         where: filters,
         include: {
-        files: true,
-        users: {
-            select: userSelect,
-        },
-        comment_votes: {
-            select: {
-            userId: true,
-            value: true,
+            files: true,
+            users: {
+                select: userSelect,
             },
-        },
+            comment_votes: {
+                select: {
+                userId: true,
+                value: true,
+                },
+            },
+            posts: {
+                select: {
+                    userId: true,
+                },
+            },
         },
     });
 };

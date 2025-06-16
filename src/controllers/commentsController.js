@@ -269,6 +269,10 @@ const handleMarkCommentHelpful = async (req, res) => {
         if(!comment){
             return res.status(StatusCodes.NOT_FOUND).json({ message: 'Comment not found' });
         }
+        
+        if(comment.posts.userId !== user.id){
+            return res.status(StatusCodes.FORBIDDEN).json({ message: 'You are not allowed to mark this comment as helpful.' });
+        }
 
         const updatedComment = await markCommentHelpful({ commentId, isHelpful });
 

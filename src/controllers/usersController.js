@@ -8,6 +8,7 @@ const { followUser, unfollowUser, isUserFollowed, getUserFollowersCount } = requ
 const { createPasswordResetToken, getPasswordResetToken, deletePasswordResetToken } = require('../model/resetTokens');
 const { sendResetEmail } = require('../services/emailService');
 const crypto = require('crypto');
+const ROLES = require('../config/roles');
 
 const handleUploadAvatar = async (req, res) => {
     try {
@@ -18,8 +19,8 @@ const handleUploadAvatar = async (req, res) => {
         }
 
         const user = req.user;
-
-        if(user.id != userId){
+        const canUpload = user.id == userId || user.roles.includes(ROLES.Admin);
+        if(!canUpload){
             return res.sendStatus(StatusCodes.FORBIDDEN);
         }
         

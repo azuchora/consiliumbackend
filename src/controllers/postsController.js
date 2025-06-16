@@ -7,6 +7,7 @@ const { censorFile } = require('../services/censorService');
 const POST_STATUSES = require('../config/postStatuses');
 const { followPost, unfollowPost, isPostFollowed, getUserFollowers } = require('../model/follows');
 const { notifyUser } = require('../services/notificationService');
+const ROLES = require('../config/roles');
 
 const allowdGenders = ['male', 'female'];
 
@@ -126,8 +127,8 @@ const handleDeletePost = async (req, res) => {
         if(!foundPost){
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid post id.' });
         }
-
-        if(foundPost.userId != user.id){
+        
+        if(foundPost.userId != user.id && user.roles.includes(ROLES.ADMIN)){
             return res.status(StatusCodes.FORBIDDEN).json({ message: 'No permission to delete post.' });
         }
 
