@@ -17,14 +17,13 @@ Projekt powstał jako część mojej pracy dyplomowej na kierunku Informatyka.
   - Wątków
   - Komentarzy i odpowiedzi
   - Prywatnych wiadomości
-- Cache **Redis** (soon™)
 
 ## 🛠️ Technologie
 
 - **Node.js** + **Express.js** + **PRISMA ORM**
 - **PostgreSQL**
 - **JWT** do uwierzytelniania
-- **Redis** *(soon™)*
+- **Socket.IO**
 
 ## 🚀 Jak uruchomić backend lokalnie
 
@@ -51,8 +50,16 @@ DATABASE_URL=your_db_url
 ACCESS_TOKEN_SECRET=your_secret
 REFRESH_TOKEN_SECRET=your_secret
 API_ROUTE=/api/v1
+EMAIL_USER=mail@example.com
+EMAIL_PASS=your_secret
+EMAIL_SERVICE=gmail
+FRONTEND_URL=example.com
 ```
-5. Wygeneruj klient prismy
+5. Stwórz tabele w bazie danych i wygeneruj klient prismy
+
+```bash
+npx prisma migrate dev --name init
+```
 
 ```bash
 npx prisma generate

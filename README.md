@@ -17,14 +17,13 @@ The project is part of my bachelor's thesis in Computer Science.
   - Topics
   - Comments and replies
   - Private messages
-- **Redis** support for caching (soon™)
 
 ## 🛠️ Technologies
 
 - **Node.js** + **Express.js** + **PRISMA ORM**
 - **PostgreSQL**
 - **JWT** for authentication
-- **Redis** *(soon™)*
+- **Socket.IO**
 
 ## 🚀 How to run the backend locally
 
@@ -51,9 +50,17 @@ DATABASE_URL=your_db_url
 ACCESS_TOKEN_SECRET=your_secret
 REFRESH_TOKEN_SECRET=your_secret
 API_ROUTE=/api/v1
+EMAIL_USER=mail@example.com
+EMAIL_PASS=your_secret
+EMAIL_SERVICE=gmail
+FRONTEND_URL=example.com
 ```
 
-4. Generate prisma client
+4. Create database and generate prisma client
+
+```bash
+npx prisma migrate dev --name init
+```
 
 ```bash
 npx prisma generate

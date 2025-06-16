@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 
 const sendResetEmail = async (email, token) => {
     const transporter = nodemailer.createTransport({
-        service: 'icloud',
+        service: process.env.EMAIL_SERVICE,
         secure: false,
         auth: {
           user: process.env.EMAIL_USER,
