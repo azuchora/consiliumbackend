@@ -21,7 +21,7 @@ const { setupSockets } = require('./src/socket');
 const http = require('http');
 
 const APP_PORT = process.env.PORT || 3300;
-const API_ROUTE = process.env.API_ROUTE;
+const API_ROUTE = process.env.API_ROUTE || '/api/v1';
 
 const app = express();
 const server = http.createServer(app);
