@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "build": "npx prisma generate && npx prisma migrate dev --name init",
+    "start": "npm run build && node index.js",
     "dev": "nodemon index.js"
   },
   "author": "",
