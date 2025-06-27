@@ -20,7 +20,7 @@ const path = require('path');
 const { setupSockets } = require('./src/socket');
 const http = require('http');
 
-const APP_PORT = process.env.APP_PORT || 3300;
+const APP_PORT = process.env.PORT || 3300;
 const API_ROUTE = process.env.API_ROUTE;
 
 const app = express();
