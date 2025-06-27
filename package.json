@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npm install && npx prisma generate && echo 'Build completed'",
-    "start": "npm run build && node index.js",
+    "start": "node index.js",
     "dev": "nodemon index.js"
   },
   "author": "",
