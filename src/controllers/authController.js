@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcryptjs = require('bcryptjs');
 const { StatusCodes } = require('http-status-codes');
 const { getUser, updateUser } = require('../model/user');                   
 const { deleteRefreshTokens, createRefreshToken, getRefreshToken } = require('../model/refreshTokens');
@@ -47,7 +47,7 @@ const handleLogin = async (req, res) => {
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid username or password.' });
         }
     
-        const match = await bcrypt.compare(password, foundUser.hashedPassword);
+        const match = await bcryptjs.compare(password, foundUser.hashedPassword);
         if(!match){
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Invalid username or password.' });
         }

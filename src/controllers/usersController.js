@@ -3,7 +3,7 @@ const fileService = require('../services/fileService');
 const { createFile, getFile, updateFile } = require('../model/files');
 const { getUser, updateUser, clearRefreshTokens } = require('../model/user');
 const { sanitizeId } = require('../services/sanitizationService');
-const bcrypt = require('bcrypt');
+const bcryptjs = require('bcryptjs');
 const { followUser, unfollowUser, isUserFollowed, getUserFollowersCount } = require('../model/follows');
 const { createPasswordResetToken, getPasswordResetToken, deletePasswordResetToken } = require('../model/resetTokens');
 const { sendResetEmail } = require('../services/emailService');
@@ -168,12 +168,12 @@ const handleChangePassword = async (req, res) => {
             return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found.' });
         }
 
-        const match = await bcrypt.compare(oldPassword, user.hashedPassword);
+        const match = await bcryptjs.compare(oldPassword, user.hashedPassword);
         if (!match) {
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Old password is incorrect.' });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcryptjs.hash(newPassword, 10);
         await updateUser({ id: userId }, { hashedPassword });
 
         res.status(StatusCodes.OK).json({ message: 'Password changed successfully.' });
@@ -218,7 +218,7 @@ const handleResetPassword = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid or expired token.' });
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcryptjs.hash(newPassword, 10);
         await updateUser({ id: resetToken.userId }, { hashedPassword });
         await deletePasswordResetToken({ token });
 

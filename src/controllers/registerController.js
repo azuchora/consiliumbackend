@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcryptjs = require('bcryptjs');
 const { StatusCodes } = require('http-status-codes');
 const { getUser, createUser } = require('../model/user');
 const { assignRole } = require('../model/roles');
@@ -37,7 +37,7 @@ const handleNewUser = async (req, res) => {
             return res.status(StatusCodes.CONFLICT).json({ message: 'User with this username or email already exists.' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcryptjs.hash(password, 10);
 
         const newUser = await createUser({
             username,
