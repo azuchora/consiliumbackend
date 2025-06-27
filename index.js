@@ -19,6 +19,7 @@ const chatRouter = require('./src/routes/chat');
 const path = require('path');
 const { setupSockets } = require('./src/socket');
 const http = require('http');
+const { prisma } = require('./src/db/client');
 
 const API_ROUTE = process.env.API_ROUTE || '/api/v1';
 
@@ -46,10 +47,23 @@ app.use(`${API_ROUTE}`, chatRouter);
 
 setupSockets(server);
 
+const initRoles = async () => {
+    await prisma.roles.createMany({
+        data: [
+            { id: 3146, name: 'Admin' },
+            { id: 8153, name: 'Verified' },
+            { id: 2771, name: 'User' },
+            { id: 9121, name: 'Moderator' }
+        ],
+        skipDuplicates: true,
+    })
+}
+
 app.get('/*', async (req, res) => {
     res.send('hello world');
 })
 
 server.listen(process.env.PORT, () => {
     console.log(`App listening on port ${process.env.PORT}`);
+    initRoles();
 });
