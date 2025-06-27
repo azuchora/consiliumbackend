@@ -20,7 +20,6 @@ const path = require('path');
 const { setupSockets } = require('./src/socket');
 const http = require('http');
 
-const APP_PORT = process.env.PORT || 3300;
 const API_ROUTE = process.env.API_ROUTE || '/api/v1';
 
 const app = express();
@@ -51,6 +50,6 @@ app.get('/*', async (req, res) => {
     res.send('hello world');
 })
 
-server.listen(APP_PORT, () => {
+server.listen(process.env.PORT, () => {
     console.log(`App listening on port ${APP_PORT}`);
 });
