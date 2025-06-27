@@ -47,7 +47,7 @@ app.use(`${API_ROUTE}`, chatRouter);
 
 setupSockets(server);
 
-const initRoles = async () => {
+const initDatabase = async () => {
     await prisma.roles.createMany({
         data: [
             { id: 3146, name: 'Admin' },
@@ -56,7 +56,16 @@ const initRoles = async () => {
             { id: 9121, name: 'Moderator' }
         ],
         skipDuplicates: true,
-    })
+    });
+
+    await prisma.post_statuses.createMany({
+        data: [
+            { id: 1, name: 'OK' },
+            { id: 2, name: 'URGENT' },
+            { id: 3, name: 'INFO' }
+        ],
+        skipDuplicates: true,
+    });
 }
 
 app.get('/*', async (req, res) => {
@@ -65,5 +74,5 @@ app.get('/*', async (req, res) => {
 
 server.listen(process.env.PORT, () => {
     console.log(`App listening on port ${process.env.PORT}`);
-    initRoles();
+    initDatabase();
 });
