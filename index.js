@@ -23,8 +23,16 @@ const { prisma } = require('./src/db/client');
 
 const API_ROUTE = process.env.API_ROUTE || '/api/v1';
 
+
 const app = express();
 const server = http.createServer(app);
+
+const reactBuildPath = path.join(__dirname, 'build');
+
+app.use(express.static(reactBuildPath));
+app.get(/^\/(?!api\/v1|static).*/, (req, res) => {
+  res.sendFile(path.join(reactBuildPath, 'index.html'));
+});
 
 app.use(credentials);
 app.use(cors(corsOptions));
