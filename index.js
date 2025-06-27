@@ -51,5 +51,5 @@ app.get('/*', async (req, res) => {
 })
 
 server.listen(process.env.PORT, () => {
-    console.log(`App listening on port ${APP_PORT}`);
+    console.log(`App listening on port ${process.env.PORT}`);
 });
