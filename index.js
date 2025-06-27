@@ -76,10 +76,6 @@ const initDatabase = async () => {
     });
 }
 
-app.get('/*', async (req, res) => {
-    res.send('hello world');
-})
-
 server.listen(process.env.PORT, () => {
     console.log(`App listening on port ${process.env.PORT}`);
     initDatabase();
