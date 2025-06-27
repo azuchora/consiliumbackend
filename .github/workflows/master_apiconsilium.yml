@@ -30,6 +30,8 @@ jobs:
           npm run test --if-present
       
       - name: Setup prisma and create db tables
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           npx prisma generate
           npx prisma migrate dev --name initial
