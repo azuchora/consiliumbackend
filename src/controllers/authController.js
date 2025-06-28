@@ -77,7 +77,7 @@ const handleLogin = async (req, res) => {
             clearRefreshTokenCookie(res);
             await deleteRefreshTokens({ token: refreshToken });
         }
-
+        console.log(foundUser.id, newRefreshToken)
         await createRefreshToken({ userId: foundUser.id, refreshToken: newRefreshToken });
     
         setRefreshTokenCookie(res, newRefreshToken);

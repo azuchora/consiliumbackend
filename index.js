@@ -20,6 +20,8 @@ const path = require('path');
 const { setupSockets } = require('./src/socket');
 const http = require('http');
 const { prisma } = require('./src/db/client');
+const ROLES = require('./src/config/roles');
+const bcryptjs = require('bcryptjs');
 
 const API_ROUTE = process.env.API_ROUTE || '/api/v1';
 
@@ -71,6 +73,31 @@ const initDatabase = async () => {
             { id: 1, name: 'OK' },
             { id: 2, name: 'URGENT' },
             { id: 3, name: 'INFO' }
+        ],
+        skipDuplicates: true,
+    });
+
+    // create default admin account
+    await prisma.users.upsert({ 
+        where: { id: 99999 },
+        update: {},
+        create: {
+            id: 99999,
+            username: 'administrator',
+            email: 'antonizuchora@icloud.com',
+            name: 'Administrator',
+            surname: 'Serwisu',
+            pwz: '1111111',
+            pesel: '11111111111',
+            hashedPassword: await bcryptjs.hash('@dmin', 10),
+        },
+    });
+
+    await prisma.user_roles.createMany({
+        data: [
+            { id: 999997, userId: 99999, roleId: ROLES.Admin },
+            { id: 999998, userId: 99999, roleId: ROLES.Verified },
+            { id: 999999, userId: 99999, roleId: ROLES.User },
         ],
         skipDuplicates: true,
     });
